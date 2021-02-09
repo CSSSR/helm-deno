@@ -1,3 +1,8 @@
+import * as path from "https://deno.land/std@0.70.0/path/mod.ts"
+import { compileDenoChart } from "./lib/compiler/index.ts"
+import { renderDenoChart } from "./lib/renderer/index.ts"
+import { helmTemplate, helmExecute } from "./lib/common/helm.ts"
+
 function helmDenoUsage() {
   const pluginUsage = `
 helm deno $1
@@ -12,39 +17,34 @@ Example:
 Typical usage:
   $ helm deno upgrade i1 stable/nginx-ingress -f values.test.yaml
   $ helm deno lint ./my-chart -f values.test.yaml
-`;
-  console.log(pluginUsage);
-  Deno.exit(0);
+`
+  console.log(pluginUsage)
+  Deno.exit(0)
 }
 
 async function main() {
-  const denoArgs = Deno.args[0];
+  const denoArgs = Deno.args[0]
+  const chartPath = Deno.args[2]
+
   if (!denoArgs) {
-    helmDenoUsage();
+    helmDenoUsage()
   }
 
-  const cmd = Deno.run({
-    cmd: [Deno.env.get("HELM_BINARY") || "helm3", ...Deno.args],
-    stdout: "piped",
-    stderr: "piped",
-  });
-  const output = await cmd.output();
-  const status = await cmd.status();
-  const manifests = new TextDecoder().decode(output);
-  const error = await cmd.stderrOutput();
-  const errorStr = new TextDecoder().decode(error);
+  await compileDenoChart(Deno.args[2])
 
-  if (!status.success) {
-    throw new Error(errorStr);
-  }
+  const manifests = await helmTemplate(Deno.args)
 
-  console.log(manifests);
-  cmd.close();
+  await renderDenoChart(manifests, chartPath)
+
+  await helmExecute(Deno.args)
+
+  // Remove templates directory
+  await Deno.remove(path.join(chartPath, "./templates"), { recursive: true })
 }
 
 if (import.meta.main) {
   main().catch((err) => {
-    console.error(err);
-    Deno.exit(1);
-  });
+    console.error(err)
+    Deno.exit(1)
+  })
 }
