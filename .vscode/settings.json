@@ -1,0 +1,9 @@
+{
+  "deno.enable": true,
+  "deno.unstable": true,
+  "deno.lint": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "deno.import_intellisense_origins": {
+    "https://deno.land": true
+  }
+}

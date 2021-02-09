@@ -1,0 +1,10 @@
+name: "deno"
+version: "0.0.1-dev"
+usage: "Helm charts with Deno"
+description: |-
+  This plugin provides Deno for Helm charts
+useTunnel: false
+hooks:
+  install: "$HELM_PLUGIN_DIR/scripts/install.sh"
+  update: "$$HELM_PLUGIN_DIR/scripts/install.sh"
+command: "$HELM_PLUGIN_DIR/bin/deno run --unstable --allow-read --allow-write --allow-run --allow-env --quiet $HELM_PLUGIN_DIR/index.ts"
