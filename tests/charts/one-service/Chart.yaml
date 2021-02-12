@@ -1,0 +1,5 @@
+apiVersion: v2
+name: one-service
+description: A helm chart for helm-deno testing
+icon: https://raw.githubusercontent.com/twbs/icons/a41f763/icons/pie-chart-fill.svg
+version: 1.0.0

@@ -1,5 +1,7 @@
-import * as fs from "https://deno.land/std@0.70.0/fs/mod.ts"
-import * as path from "https://deno.land/std@0.70.0/path/mod.ts"
+import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
+import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
+import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
+import { parseHelmTemplateArgs } from "../../args/parse-helm-template-args.ts"
 
 export async function checkChartPath(chartPath: string) {
   if (!chartPath) {
@@ -65,28 +67,110 @@ export async function helmExecute(
   console.log(outputStr)
 }
 
-export async function helmTemplate(
+const valuesAndReleaseData = `
+kind: ChartContext
+spec:
+  release: | {{- .Release | toYaml | nindent 4 }}
+  values: | {{- .Values | toYaml | nindent 4 }}
+`
+
+interface HelmRelease {
+  Name: string
+  Namespace: string
+  IsInstall: string
+  IsUpgrade: string
+  Revision: number
+  Service: string
+}
+
+interface Release {
+  name: string
+  namespace: string
+  isInstall: string
+  isUpgrade: string
+  revision: number
+  service: string
+}
+
+export interface ChartContext {
+  release: Release
+  // deno-lint-ignore no-explicit-any
+  values: any
+}
+
+function normalizeRelease(r: HelmRelease): Release {
+  return {
+    name: r.Name,
+    namespace: r.Namespace,
+    isInstall: r.IsInstall,
+    isUpgrade: r.IsUpgrade,
+    revision: r.Revision,
+    service: r.Service,
+  }
+}
+
+export function ignoreNotFoundError(promise: Promise<void>): Promise<void> {
+  return promise.catch((err) => {
+    if (!(err instanceof Deno.errors.NotFound)) {
+      return Promise.reject(err)
+    }
+  })
+}
+
+export async function getReleaseAndValues(
   release: string,
   chartPath: string,
-  options: string[]
-): Promise<string> {
-  const helm = Deno.env.get("HELM_BINARY") || "helm3"
-  const cmd = Deno.run({
-    cmd: [helm, "template", release, chartPath, ...options],
-    stdout: "piped",
-    stderr: "piped",
-  })
-  const output = await cmd.output()
-  const manifests = new TextDecoder().decode(output)
+  args: readonly string[]
+): Promise<ChartContext> {
+  const chartContextTemplatePath = path.join(
+    chartPath,
+    "templates/values-and-release.yaml"
+  )
+  try {
+    await fs.ensureDir(path.join(chartPath, "templates"))
 
-  const error = await cmd.stderrOutput()
-  const errorStr = new TextDecoder().decode(error)
+    await Deno.writeFile(
+      chartContextTemplatePath,
+      new TextEncoder().encode(valuesAndReleaseData)
+    )
 
-  cmd.close()
+    const helm = Deno.env.get("HELM_BINARY") || "helm3"
+    const cmd = Deno.run({
+      cmd: [
+        helm,
+        "template",
+        release,
+        chartPath,
+        ...parseHelmTemplateArgs(args),
+      ],
+      stdout: "piped",
+      stderr: "piped",
+    })
 
-  if (errorStr) {
-    return Promise.reject(errorStr)
+    const [output, error, status] = await Promise.all([
+      cmd.output(),
+      cmd.stderrOutput(),
+      cmd.status(),
+    ])
+    cmd.close()
+
+    const manifests = new TextDecoder().decode(output)
+    const errorStr = new TextDecoder().decode(error)
+
+    if (!status.success) {
+      return Promise.reject(errorStr)
+    }
+
+    // deno-lint-ignore no-explicit-any
+    const data = yaml.parseAll(manifests) as any[]
+
+    const x = data.find((doc) => doc.kind === "ChartContext").spec
+    return {
+      // deno-lint-ignore no-explicit-any
+      release: normalizeRelease(yaml.parse(x.release) as any),
+      values: yaml.parse(x.values),
+    }
+  } finally {
+    await ignoreNotFoundError(Deno.remove(chartContextTemplatePath))
   }
-
-  return manifests
 }

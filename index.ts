@@ -1,18 +1,19 @@
-import * as fs from "https://deno.land/std@0.70.0/fs/mod.ts"
-import { prepareDenoChart, renderDenoChart } from "./lib/deno/index.ts"
+// deno-lint-ignore-file
+import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
+import { parseArgs } from "./args/parse-helm-deno-args.ts"
+import { renderDenoChart } from "./lib/deno/index.ts"
 import {
   checkChartPath,
   fetchChart,
-  helmTemplate,
+  getReleaseAndValues as getChartContext,
   helmExecute,
+  ignoreNotFoundError,
 } from "./lib/helm/index.ts"
 
 const supportedHelmCommand = ["template", "install", "upgrade"]
 
 function helmDenoUsage() {
   const pluginUsage = `
-helm deno $1
-
 This is a wrapper for "helm [command]". It will use Deno for rendering charts
 before running "helm [command]"
 
@@ -58,13 +59,47 @@ function withErrorMsg<T>(p: Promise<T>, msg: string): Promise<T> {
   return p.catch((err) => Promise.reject(`${msg}: ${err}`))
 }
 
+function getArgsWithoutPlugins(args: string[]): string[] {
+  // TODO: get current installed plugins
+  const plugins = ["conftest", "diff", "push", "secrets"]
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+
+    if (arg.startsWith("-")) {
+      continue
+    }
+
+    if (plugins.some((plugin) => plugin === arg)) {
+      return getArgsWithoutPlugins([...args.slice(0, i - 1), ...args.slice(i)])
+    }
+
+    break
+  }
+
+  return args
+}
+
+function normalizeArgs(args: string[]): string[] {
+  return getArgsWithoutPlugins(args)
+}
+
 async function main() {
-  const helmCommand = Deno.args[0]
-  const releaseName = Deno.args[1]
-  const chartPath = Deno.args[2]
+  const { helmArgs: args, options } = parseArgs(normalizeArgs(Deno.args))
+  const debug: typeof console.error = (...args) => {
+    if (options.logLevel === "debug") {
+      console.error(...args)
+    }
+  }
+  debug(`Running with options:\n${JSON.stringify(options, null, 2)}`)
+
+  const helmCommand = args[0]
+  const releaseName = args[1]
+  const chartPath = args[2]
 
   if (!helmCommand || helmCommand === "-h" || helmCommand === "--help") {
     helmDenoUsage()
+    return
   }
 
   if (!supportedHelmCommand.includes(helmCommand)) {
@@ -78,32 +113,44 @@ async function main() {
     "Could not create temp directory"
   )
 
+  debug(`Temporary directory ${workdir} has been created`)
+  const isLocalChart = isChartExist(chartPath)
+
   try {
     // Fetch chart into temporaty directory
-    if (isChartExist(chartPath)) {
+    if (isLocalChart) {
+      debug(`Copying chart ${chartPath} to temporary directory`)
       await copyChart(chartPath, workdir)
+      debug(`Successfuly copied chart ${chartPath} to temporary directory`)
     } else {
+      debug(`Fetching chart ${chartPath} to temporary directory`)
       await fetchChart(chartPath, workdir)
+      debug(`Successfuly fetched chart ${chartPath} to temporary directory`)
     }
 
-    // Create values-and-release.yaml file in temporaty directory
-    await prepareDenoChart(workdir)
+    const chartContext = await getChartContext(releaseName, workdir, args)
+    debug(`Chart context:\n${JSON.stringify(chartContext, null, 2)}`)
 
-    // Render values-and-release.yaml
-    const manifests = await helmTemplate(
-      releaseName,
-      workdir,
-      Deno.args.slice(3)
+    await renderDenoChart(chartContext, workdir)
+    debug("Deno templates were successfuly rendered")
+
+    debug(
+      `Executing: ${helmCommand} ${releaseName} ${workdir} ${args
+        .slice(3)
+        .join(" ")}`
     )
-
-    // Render deno source code
-    await renderDenoChart(manifests, workdir)
-
-    // Execute helm command
-    await helmExecute(helmCommand, releaseName, workdir, Deno.args.slice(3))
+    await helmExecute(helmCommand, releaseName, workdir, args.slice(3))
+  } catch (err) {
+    if (err?.message) {
+      // Replace paths in stacktrace with readable versions
+      err.message = isLocalChart
+        ? err.message.replaceAll(workdir, chartPath)
+        : err.message.replaceAll(`file://${workdir}`, "<chart-root>")
+    }
+    throw err
   } finally {
     // Remove temporary directory
-    await Deno.remove(workdir, { recursive: true })
+    await ignoreNotFoundError(Deno.remove(workdir, { recursive: true }))
   }
 }
 

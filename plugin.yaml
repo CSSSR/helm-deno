@@ -7,4 +7,4 @@ useTunnel: false
 hooks:
   install: "$HELM_PLUGIN_DIR/scripts/install.sh"
   update: "$$HELM_PLUGIN_DIR/scripts/install.sh"
-command: "$HELM_PLUGIN_DIR/bin/deno run --unstable --allow-read --allow-write --allow-run --allow-env --quiet $HELM_PLUGIN_DIR/index.ts"
+command: "$HELM_PLUGIN_DIR/scripts/run.sh"
