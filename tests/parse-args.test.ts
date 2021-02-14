@@ -11,9 +11,11 @@ Deno.test("Should parse --deno-log-level flag", () => {
     "selector.app=my-app",
     "--deno-log-level",
     "debug",
+    "--deno-keep-tmp-chart"
   ])
 
   assertEquals(options.logLevel, "debug")
+  assertEquals(options.keepTmpChart, true)
   assertEquals(helmArgs, [
     "upgrade",
     "--install",

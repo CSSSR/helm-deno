@@ -22,7 +22,7 @@ export async function fetchChart(chartPath: string, destination: string) {
     return Promise.reject(`Could not find ${chartPath}`)
   }
 
-  const helm = Deno.env.get("HELM_BINARY") || "helm3"
+  const helm = Deno.env.get("HELM_BIN")!
   const cmd = Deno.run({
     cmd: [helm, "fetch", chartPath, "--untar", "--untardir", destination],
     stdout: "piped",
@@ -39,32 +39,18 @@ export async function fetchChart(chartPath: string, destination: string) {
   }
 }
 
-export async function helmExecute(
-  command: string,
-  release: string,
-  chartPath: string,
-  options: string[]
-) {
-  const helm = Deno.env.get("HELM_BINARY") || "helm3"
+export async function helmExecute(args: string[]) {
+  const helm = Deno.env.get("HELM_BIN")!
   const cmd = Deno.run({
-    cmd: [helm, command, release, chartPath, ...options],
-    stdout: "piped",
-    stderr: "piped",
+    cmd: [helm, ...args],
+    stdout: "inherit",
+    stderr: "inherit",
   })
 
-  const output = await cmd.output()
-  const outputStr = new TextDecoder().decode(output)
-
-  const error = await cmd.stderrOutput()
-  const errorStr = new TextDecoder().decode(error)
-
-  cmd.close()
-
-  if (errorStr) {
-    throw new Error(errorStr)
+  const status = await cmd.status()
+  if (!status.success) {
+    Deno.exit(status.code)
   }
-
-  console.log(outputStr)
 }
 
 const valuesAndReleaseData = `
@@ -134,7 +120,7 @@ export async function getReleaseAndValues(
       new TextEncoder().encode(valuesAndReleaseData)
     )
 
-    const helm = Deno.env.get("HELM_BINARY") || "helm3"
+    const helm = Deno.env.get("HELM_BIN")!
     const cmd = Deno.run({
       cmd: [
         helm,

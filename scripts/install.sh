@@ -41,3 +41,7 @@ chmod +x "$exe"
 rm "$exe.zip"
 
 echo "Deno was installed successfully to $exe"
+
+"$exe" bundle --unstable "$HELM_PLUGIN_DIR/index.ts" "$HELM_PLUGIN_DIR/bin/bundle.js"
+
+echo "helm-deno compiled successfuly"

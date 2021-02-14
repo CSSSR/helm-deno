@@ -1,0 +1,10 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ (or .Values.serviceName .Release.Name) }}
+spec:
+  selector: {{- toYaml .Values.selector | nindent 4 }}
+  ports:
+  - name: http
+    port: 80
+    targetPort: http

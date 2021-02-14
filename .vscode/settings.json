@@ -4,6 +4,7 @@
   "deno.lint": true,
   "typescript.tsdk": "node_modules/typescript/lib",
   "deno.import_intellisense_origins": {
-    "https://deno.land": true
+    "https://deno.land": true,
+    "https://x.nest.land": true
   }
 }
