@@ -2,9 +2,11 @@ import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
 import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
 import {
   assertEquals,
-  assertMatch,
   assertStringIncludes,
 } from "https://deno.land/std@0.86.0/testing/asserts.ts"
+
+const runCluserDependentTests =
+  Deno.env.get("RUN_CLUSER_DEPENDENT_TESTS") === "true"
 
 const helmPluginDir = path.join(
   import.meta.url.replace("file://", ""),
@@ -37,7 +39,7 @@ async function runHelmDeno(args: string[]) {
 }
 
 Deno.test(
-  "helm deno template charts/one-service --set selector.app=my-app",
+  "helm deno template my-release-name charts/one-service --set selector.app=my-app",
   async () => {
     const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
 
@@ -76,7 +78,7 @@ Deno.test(
 )
 
 Deno.test(
-  "helm deno template charts/one-service (error handling: missing selector value)",
+  "helm deno template my-release-name charts/one-service (error handling: missing selector value)",
   async () => {
     const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
 
@@ -97,7 +99,7 @@ Deno.test(
 )
 
 Deno.test(
-  "helm deno template charts/no-deno-chart --set selector.app=my-app",
+  "helm deno template my-release-name charts/no-deno-chart --set selector.app=my-app",
   async () => {
     const chartPath = path.join(helmPluginDir, "tests/charts/no-deno-chart")
 
@@ -134,3 +136,42 @@ Deno.test(
     assertEquals(status.success, true)
   }
 )
+
+Deno.test({
+  name:
+    "helm deno diff upgrade my-release-name charts/one-service --set selector.app=my-app --allow-unreleased",
+  ignore: !runCluserDependentTests,
+  async fn() {
+    const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
+
+    const { status, stdout, stderr } = await runHelmDeno([
+      "diff",
+      "upgrade",
+      "my-release-name",
+      chartPath,
+      "--set",
+      "selector.app=my-app",
+      "--namespace",
+      "default",
+      "--allow-unreleased",
+      "--no-color",
+      "--output",
+      "json",
+    ])
+
+    assertEquals(stderr, "")
+    const stripAllowUnreleadesWarning = (str: string) =>
+      str.split("\n").slice(5).join("\n")
+
+    assertEquals(JSON.parse(stripAllowUnreleadesWarning(stdout)), [
+      {
+        api: "v1",
+        kind: "Service",
+        namespace: "default",
+        name: "my-release-name",
+        change: "ADD",
+      },
+    ])
+    assertEquals(status.success, true)
+  },
+})
