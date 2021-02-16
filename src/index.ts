@@ -3,13 +3,11 @@ import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
 import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
 import { parseHelmArgs } from "./args/parse-helm-args.ts"
 import { parseArgs } from "./args/parse-helm-deno-args.ts"
-import { renderDenoChart } from "./lib/deno/index.ts"
-import {
-  fetchChart,
-  getReleaseAndValues as getChartContext,
-  helmExecute,
-  ignoreNotFoundError,
-} from "./lib/helm/index.ts"
+import { renderDenoChart } from "./deno/render-chart.ts"
+import { helmExecute } from "./helm/execute.ts"
+import { fetchChart } from "./helm/fetch.ts"
+import { getChartContext } from "./helm/get-chart-context.ts"
+import { ignoreNotFoundError } from "./utils/ignore-not-found-error.ts"
 
 function helmDenoUsage() {
   const pluginUsage = `

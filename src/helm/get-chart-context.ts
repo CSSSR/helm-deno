@@ -2,50 +2,8 @@ import type { ChartContext, Release } from "../std/mod.ts"
 import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
 import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
 import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
-import { parseHelmTemplateArgs } from "../../args/parse-helm-template-args.ts"
-
-export async function fetchChart(
-  chartPath: string,
-  destination: string
-): Promise<void> {
-  const destinationExists = await fs.exists(chartPath)
-  if (!destinationExists) {
-    return Promise.reject(`Could not find ${chartPath}`)
-  }
-
-  const helm = Deno.env.get("HELM_BIN") as string
-  const cmd = Deno.run({
-    cmd: [helm, "fetch", chartPath, "--untar", "--untardir", destination],
-    stdout: "piped",
-    stderr: "piped",
-  })
-
-  const [status, output, error] = await Promise.all([
-    cmd.status(),
-    cmd.output(),
-    cmd.stderrOutput(),
-  ])
-  cmd.close()
-
-  if (!status.success) {
-    console.log(new TextDecoder().decode(output))
-    return Promise.reject(new TextDecoder().decode(error))
-  }
-}
-
-export async function helmExecute(args: string[]): Promise<void> {
-  const helm = Deno.env.get("HELM_BIN") as string
-  const cmd = Deno.run({
-    cmd: [helm, ...args],
-    stdout: "inherit",
-    stderr: "inherit",
-  })
-
-  const status = await cmd.status()
-  if (!status.success) {
-    Deno.exit(status.code)
-  }
-}
+import { parseHelmTemplateArgs } from "../args/parse-helm-template-args.ts"
+import { ignoreNotFoundError } from "../utils/ignore-not-found-error.ts"
 
 const valuesAndReleaseData = `
 kind: ChartContext
@@ -74,15 +32,7 @@ function normalizeRelease(r: HelmRelease): Release {
   }
 }
 
-export function ignoreNotFoundError(promise: Promise<void>): Promise<void> {
-  return promise.catch((err) => {
-    if (!(err instanceof Deno.errors.NotFound)) {
-      return Promise.reject(err)
-    }
-  })
-}
-
-export async function getReleaseAndValues(
+export async function getChartContext(
   release: string,
   chartPath: string,
   args: readonly string[]

@@ -7,11 +7,9 @@ import {
 
 const runAllTests = Deno.env.get("RUN_ALL_TESTS") === "true"
 
-const helmPluginDir = path.join(
-  import.meta.url.replace("file://", ""),
-  "../../.."
-)
+const helmPluginDir = path.join(import.meta.url.replace("file://", ""), "../..")
 const helmDenoBin = path.join(helmPluginDir, "scripts/dev.sh")
+const chartsBin = path.join(helmPluginDir, "e2e-tests/charts")
 
 function toText(bytes: Uint8Array): string {
   return new TextDecoder().decode(bytes)
@@ -40,7 +38,7 @@ async function runHelmDeno(args: string[]) {
 Deno.test(
   "should successfuly run `helm deno template` with deno chart",
   async () => {
-    const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
+    const chartPath = path.join(chartsBin, "one-service")
 
     const { status, stdout, stderr } = await runHelmDeno([
       "template",
@@ -79,7 +77,7 @@ Deno.test(
 Deno.test(
   "should handle error in deno chart during `helm deno template`",
   async () => {
-    const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
+    const chartPath = path.join(chartsBin, "one-service")
 
     const { status, stdout, stderr } = await runHelmDeno([
       "template",
@@ -101,7 +99,7 @@ Deno.test({
   name: "should successfuly run `helm deno template` with regular chart",
   ignore: !runAllTests,
   async fn() {
-    const chartPath = path.join(helmPluginDir, "tests/charts/no-deno-chart")
+    const chartPath = path.join(chartsBin, "no-deno-chart")
 
     const { status, stdout, stderr } = await runHelmDeno([
       "template",
@@ -138,7 +136,7 @@ Deno.test({
 })
 
 Deno.test("should support helm-secrets plugin", async () => {
-  const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
+  const chartPath = path.join(chartsBin, "one-service")
 
   const { status, stdout, stderr } = await runHelmDeno([
     "secrets",
@@ -178,7 +176,7 @@ Deno.test({
   name: "should support helm-diff plugin",
   ignore: !runAllTests,
   async fn() {
-    const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
+    const chartPath = path.join(chartsBin, "one-service")
 
     const { status, stdout, stderr } = await runHelmDeno([
       "diff",
@@ -215,7 +213,7 @@ Deno.test({
   name: "should support helm-diff and helm-secrets plugins together",
   ignore: !runAllTests,
   async fn() {
-    const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
+    const chartPath = path.join(chartsBin, "one-service")
 
     const { status, stdout, stderr } = await runHelmDeno([
       "secrets",

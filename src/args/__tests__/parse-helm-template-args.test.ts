@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.86.0/testing/asserts.ts"
-import { parseHelmTemplateArgs } from "../args/parse-helm-template-args.ts"
+import { parseHelmTemplateArgs } from "../parse-helm-template-args.ts"
 
 Deno.test("Should parse helm template args", () => {
   const args = parseHelmTemplateArgs([

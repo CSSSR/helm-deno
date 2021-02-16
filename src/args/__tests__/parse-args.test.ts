@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.86.0/testing/asserts.ts"
-import { parseArgs } from "../args/parse-helm-deno-args.ts"
+import { parseArgs } from "../parse-helm-deno-args.ts"
 
 Deno.test("Should parse --deno-log-level flag", () => {
   const { options, helmArgs } = parseArgs([
