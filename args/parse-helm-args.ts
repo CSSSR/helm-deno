@@ -1,24 +1,29 @@
 export function parseHelmArgs(
   args: readonly string[]
 ): {
-  command: string[]
-  releaseName: string
-  chartLocation: string
-  options: readonly string[]
+  readonly command: readonly string[]
+  readonly releaseName: string
+  readonly chartLocation: string
+  readonly options: readonly string[]
 } {
-  if (args[0] === "diff") {
-    return {
-      command: args.slice(0, 2),
-      releaseName: args[2],
-      chartLocation: args[3],
-      options: args.slice(4),
-    }
+  const restArgs = args.slice()
+  const command: string[] = []
+  if (restArgs[0] === "secrets") {
+    command.push(restArgs.shift()!)
+  }
+
+  if (restArgs[0] === "diff") {
+    command.push(restArgs.shift()!)
+  }
+
+  if (["upgrade", "template", "install"].includes(restArgs[0])) {
+    command.push(restArgs.shift()!)
   }
 
   return {
-    command: args.slice(0, 1),
-    releaseName: args[1],
-    chartLocation: args[2],
-    options: args.slice(3),
+    command,
+    releaseName: restArgs[0],
+    chartLocation: restArgs[1],
+    options: restArgs.slice(2),
   }
 }

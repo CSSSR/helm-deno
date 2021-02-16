@@ -21,6 +21,7 @@ Supported helm [command] is:
   - install
   - upgrade
   - diff (helm plugin)
+  - secrets (helm plugin)
 
 You must use the options of the supported commands in strict order:
   $ helm [command] [RELEASE] [CHART] [flags]

@@ -39,7 +39,7 @@ async function runHelmDeno(args: string[]) {
 }
 
 Deno.test(
-  "helm deno template my-release-name charts/one-service --set selector.app=my-app",
+  "should successfuly run `helm deno template` with deno chart",
   async () => {
     const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
 
@@ -78,7 +78,7 @@ Deno.test(
 )
 
 Deno.test(
-  "helm deno template my-release-name charts/one-service (error handling: missing selector value)",
+  "should handle error in deno chart during `helm deno template`",
   async () => {
     const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
 
@@ -99,7 +99,7 @@ Deno.test(
 )
 
 Deno.test(
-  "helm deno template my-release-name charts/no-deno-chart --set selector.app=my-app",
+  "should successfuly run `helm deno template` with regular chart",
   async () => {
     const chartPath = path.join(helmPluginDir, "tests/charts/no-deno-chart")
 
@@ -136,10 +136,45 @@ Deno.test(
     assertEquals(status.success, true)
   }
 )
+Deno.test("should support helm-secrets plugin", async () => {
+  const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
+
+  const { status, stdout, stderr } = await runHelmDeno([
+    "secrets",
+    "template",
+    "my-release-name",
+    chartPath,
+    "--set",
+    "selector.app=my-app",
+  ])
+
+  assertEquals(stderr, "")
+  assertEquals(yaml.parseAll(stdout), [
+    {
+      apiVersion: "v1",
+      kind: "Service",
+      metadata: {
+        name: "my-release-name",
+      },
+      spec: {
+        ports: [
+          {
+            name: "http",
+            port: 80,
+            targetPort: "http",
+          },
+        ],
+        selector: {
+          app: "my-app",
+        },
+      },
+    },
+  ])
+  assertEquals(status.success, true)
+})
 
 Deno.test({
-  name:
-    "helm deno diff upgrade my-release-name charts/one-service --set selector.app=my-app --allow-unreleased",
+  name: "should support helm-diff plugin",
   ignore: !runCluserDependentTests,
   async fn() {
     const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
