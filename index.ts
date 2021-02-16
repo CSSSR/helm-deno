@@ -1,10 +1,10 @@
 // deno-lint-ignore-file
 import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
+import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
 import { parseHelmArgs } from "./args/parse-helm-args.ts"
 import { parseArgs } from "./args/parse-helm-deno-args.ts"
 import { renderDenoChart } from "./lib/deno/index.ts"
 import {
-  checkChartPath,
   fetchChart,
   getReleaseAndValues as getChartContext,
   helmExecute,
@@ -35,24 +35,20 @@ Typical usage:
   Deno.exit(0)
 }
 
-async function copyChart(path: string, destination: string) {
-  const destinationExists = await fs.exists(path)
+async function copyChart(chartPath: string, destination: string) {
+  const destinationExists = await fs.exists(chartPath)
   if (!destinationExists) {
-    return Promise.reject(`Could not find ${path}`)
+    return Promise.reject(`Could not find ${chartPath}`)
   }
   await withErrorMsg(
-    fs.copy(path, destination, { overwrite: true }),
+    fs.copy(chartPath, destination, { overwrite: true }),
     "Cloud not copy chart directory"
   )
 }
 
-async function isChartExist(path: string) {
-  try {
-    await checkChartPath(path)
-    return true
-  } catch (err) {
-    return false
-  }
+async function isChartExist(chartPath: string) {
+  const chartYamlPath = path.join(chartPath, "Chart.yaml")
+  return await fs.exists(chartYamlPath)
 }
 
 function withErrorMsg<T>(p: Promise<T>, msg: string): Promise<T> {

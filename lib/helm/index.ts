@@ -1,20 +1,8 @@
+import type { ChartContext, Release } from "../std/mod.ts"
 import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
 import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
 import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
 import { parseHelmTemplateArgs } from "../../args/parse-helm-template-args.ts"
-
-export async function checkChartPath(chartPath: string) {
-  if (!chartPath) {
-    return Promise.reject("Chart path must be specified")
-  }
-
-  const chartYamlPath = path.join(chartPath, "Chart.yaml")
-  const chartExists = await fs.exists(chartYamlPath)
-
-  if (!chartExists) {
-    return Promise.reject(`Could not find ${chartYamlPath}`)
-  }
-}
 
 export async function fetchChart(chartPath: string, destination: string) {
   const destinationExists = await fs.exists(chartPath)
@@ -67,21 +55,6 @@ interface HelmRelease {
   IsUpgrade: string
   Revision: number
   Service: string
-}
-
-interface Release {
-  name: string
-  namespace: string
-  isInstall: string
-  isUpgrade: string
-  revision: number
-  service: string
-}
-
-export interface ChartContext {
-  release: Release
-  // deno-lint-ignore no-explicit-any
-  values: any
 }
 
 function normalizeRelease(r: HelmRelease): Release {
