@@ -1,8 +1,9 @@
-.PHONY: fmt test install
+.PHONY: install fmt test test-all
 
 HELM=$(shell which helm3 || which helm)
 
 install:
+	@ yarn --frozen-lockfile
 	@ HELM_PLUGIN_DIR="$$PWD" ./scripts/install.sh v1.4.6
 
 fmt:
