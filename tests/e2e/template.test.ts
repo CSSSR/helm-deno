@@ -70,3 +70,42 @@ Deno.test(
     assertEquals(status.success, true)
   }
 )
+
+Deno.test(
+  "helm deno template charts/no-deno-chart --set selector.app=my-app",
+  async () => {
+    const chartPath = path.join(helmPluginDir, "tests/charts/no-deno-chart")
+
+    const { status, stdout, stderr } = await runHelmDeno([
+      "template",
+      "my-release-name",
+      chartPath,
+      "--set",
+      "selector.app=my-app",
+    ])
+
+    assertEquals(stderr, "")
+    assertEquals(yaml.parseAll(stdout), [
+      {
+        apiVersion: "v1",
+        kind: "Service",
+        metadata: {
+          name: "my-release-name",
+        },
+        spec: {
+          ports: [
+            {
+              name: "http",
+              port: 80,
+              targetPort: "http",
+            },
+          ],
+          selector: {
+            app: "my-app",
+          },
+        },
+      },
+    ])
+    assertEquals(status.success, true)
+  }
+)

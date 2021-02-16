@@ -21,6 +21,11 @@ export async function renderDenoChart(
   await fs.ensureDir(templateFolderPath)
 
   const denoTemplateFilePath = path.join(chartPath, "deno-templates/index.ts")
+  const isDenoChart = await fs.exists(denoTemplateFilePath)
+  if (!isDenoChart) {
+    return
+  }
+
   const denoResources = await import(denoTemplateFilePath).then((chart) => {
     return chart.default(chartContext)
   })
