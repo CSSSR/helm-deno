@@ -189,7 +189,44 @@ Deno.test({
       "--namespace",
       "default",
       "--allow-unreleased",
-      "--no-color",
+      "--output",
+      "json",
+    ])
+
+    assertEquals(stderr, "")
+    const stripAllowUnreleadesWarning = (str: string) =>
+      str.split("\n").slice(5).join("\n")
+
+    assertEquals(JSON.parse(stripAllowUnreleadesWarning(stdout)), [
+      {
+        api: "v1",
+        kind: "Service",
+        namespace: "default",
+        name: "my-release-name",
+        change: "ADD",
+      },
+    ])
+    assertEquals(status.success, true)
+  },
+})
+
+Deno.test({
+  name: "should support helm-diff and helm-secrets plugins together",
+  ignore: !runCluserDependentTests,
+  async fn() {
+    const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
+
+    const { status, stdout, stderr } = await runHelmDeno([
+      "secrets",
+      "diff",
+      "upgrade",
+      "my-release-name",
+      chartPath,
+      "--set",
+      "selector.app=my-app",
+      "--namespace",
+      "default",
+      "--allow-unreleased",
       "--output",
       "json",
     ])
