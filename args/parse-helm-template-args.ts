@@ -1,8 +1,5 @@
 import args from "https://deno.land/x/args@2.0.7/wrapper.ts"
-import {
-  CollectOption,
-  PartialOption,
-} from "https://deno.land/x/args@2.0.7/flag-types.ts"
+import { CollectOption } from "https://deno.land/x/args@2.0.7/flag-types.ts"
 import { Text } from "https://deno.land/x/args@2.0.7/value-types.ts"
 
 const textOption = (flag: string, alias?: readonly string[]) =>

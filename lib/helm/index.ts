@@ -4,13 +4,16 @@ import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
 import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
 import { parseHelmTemplateArgs } from "../../args/parse-helm-template-args.ts"
 
-export async function fetchChart(chartPath: string, destination: string) {
+export async function fetchChart(
+  chartPath: string,
+  destination: string
+): Promise<void> {
   const destinationExists = await fs.exists(chartPath)
   if (!destinationExists) {
     return Promise.reject(`Could not find ${chartPath}`)
   }
 
-  const helm = Deno.env.get("HELM_BIN")!
+  const helm = Deno.env.get("HELM_BIN") as string
   const cmd = Deno.run({
     cmd: [helm, "fetch", chartPath, "--untar", "--untardir", destination],
     stdout: "piped",
@@ -30,8 +33,8 @@ export async function fetchChart(chartPath: string, destination: string) {
   }
 }
 
-export async function helmExecute(args: string[]) {
-  const helm = Deno.env.get("HELM_BIN")!
+export async function helmExecute(args: string[]): Promise<void> {
+  const helm = Deno.env.get("HELM_BIN") as string
   const cmd = Deno.run({
     cmd: [helm, ...args],
     stdout: "inherit",
@@ -96,7 +99,7 @@ export async function getReleaseAndValues(
       new TextEncoder().encode(valuesAndReleaseData)
     )
 
-    const helm = Deno.env.get("HELM_BIN")!
+    const helm = Deno.env.get("HELM_BIN") as string
     const cmd = Deno.run({
       cmd: [
         helm,

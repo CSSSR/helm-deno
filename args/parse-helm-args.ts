@@ -9,15 +9,15 @@ export function parseHelmArgs(
   const restArgs = args.slice()
   const command: string[] = []
   if (restArgs[0] === "secrets") {
-    command.push(restArgs.shift()!)
+    command.push(restArgs.shift() as string)
   }
 
   if (restArgs[0] === "diff") {
-    command.push(restArgs.shift()!)
+    command.push(restArgs.shift() as string)
   }
 
   if (["upgrade", "template", "install"].includes(restArgs[0])) {
-    command.push(restArgs.shift()!)
+    command.push(restArgs.shift() as string)
   }
 
   return {

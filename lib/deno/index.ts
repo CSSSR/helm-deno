@@ -16,7 +16,7 @@ function stringifyResource(manifest: any): string {
 export async function renderDenoChart(
   chartContext: ChartContext,
   chartPath: string
-) {
+): Promise<void> {
   const templateFolderPath = path.join(chartPath, "templates")
   await fs.ensureDir(templateFolderPath)
 

@@ -112,7 +112,7 @@ async function main() {
 
     debug("Success")
   } catch (err) {
-    function replaceChartPath(str: string) {
+    const replaceChartPath = (str: string) => {
       return isLocalChart
         ? str.replaceAll(workdir, chartLocation)
         : str.replaceAll(`file://${workdir}`, "<chart-root>")
