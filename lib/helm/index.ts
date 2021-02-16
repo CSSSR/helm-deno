@@ -17,13 +17,16 @@ export async function fetchChart(chartPath: string, destination: string) {
     stderr: "piped",
   })
 
-  const error = await cmd.stderrOutput()
-  const errorStr = new TextDecoder().decode(error)
-
+  const [status, output, error] = await Promise.all([
+    cmd.status(),
+    cmd.output(),
+    cmd.stderrOutput(),
+  ])
   cmd.close()
 
-  if (errorStr) {
-    return Promise.reject(errorStr)
+  if (!status.success) {
+    console.log(new TextDecoder().decode(output))
+    return Promise.reject(new TextDecoder().decode(error))
   }
 }
 
