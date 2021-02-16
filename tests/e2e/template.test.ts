@@ -5,8 +5,7 @@ import {
   assertStringIncludes,
 } from "https://deno.land/std@0.86.0/testing/asserts.ts"
 
-const runCluserDependentTests =
-  Deno.env.get("RUN_CLUSER_DEPENDENT_TESTS") === "true"
+const runAllTests = Deno.env.get("RUN_ALL_TESTS") === "true"
 
 const helmPluginDir = path.join(
   import.meta.url.replace("file://", ""),
@@ -98,9 +97,10 @@ Deno.test(
   }
 )
 
-Deno.test(
-  "should successfuly run `helm deno template` with regular chart",
-  async () => {
+Deno.test({
+  name: "should successfuly run `helm deno template` with regular chart",
+  ignore: !runAllTests,
+  async fn() {
     const chartPath = path.join(helmPluginDir, "tests/charts/no-deno-chart")
 
     const { status, stdout, stderr } = await runHelmDeno([
@@ -134,8 +134,9 @@ Deno.test(
       },
     ])
     assertEquals(status.success, true)
-  }
-)
+  },
+})
+
 Deno.test("should support helm-secrets plugin", async () => {
   const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
 
@@ -175,7 +176,7 @@ Deno.test("should support helm-secrets plugin", async () => {
 
 Deno.test({
   name: "should support helm-diff plugin",
-  ignore: !runCluserDependentTests,
+  ignore: !runAllTests,
   async fn() {
     const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
 
@@ -212,7 +213,7 @@ Deno.test({
 
 Deno.test({
   name: "should support helm-diff and helm-secrets plugins together",
-  ignore: !runCluserDependentTests,
+  ignore: !runAllTests,
   async fn() {
     const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
 

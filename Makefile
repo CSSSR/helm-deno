@@ -13,6 +13,10 @@ test:
 	@ $(shell $(HELM) env) deno test --allow-run --allow-env tests/
 
 # Run all tests
-# Require kubernetes cluster with access to read services in default namespace
+#
+# Require
+# - helm-secrets
+# - helm-diff
+# - kubernetes cluster with access to read services in default namespace
 test-all:
-	@ $(shell $(HELM) env) RUN_CLUSER_DEPENDENT_TESTS=true deno test --allow-run --allow-env tests/
+	@ $(shell $(HELM) env) RUN_ALL_TESTS=true deno test --allow-run --allow-env tests/
