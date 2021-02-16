@@ -111,12 +111,17 @@ async function main() {
 
     debug("Success")
   } catch (err) {
-    if (err?.message) {
-      // Replace paths in stacktrace with readable versions
-      err.message = isLocalChart
-        ? err.message.replaceAll(workdir, chartLocation)
-        : err.message.replaceAll(`file://${workdir}`, "<chart-root>")
+    function replaceChartPath(str: string) {
+      return isLocalChart
+        ? str.replaceAll(workdir, chartLocation)
+        : str.replaceAll(`file://${workdir}`, "<chart-root>")
     }
+
+    // Replace paths in stacktrace with readable value
+    if (err?.stack) {
+      err.stack = replaceChartPath(err.stack)
+    }
+
     throw err
   } finally {
     if (!options.keepTmpChart) {

@@ -1,6 +1,10 @@
 import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
 import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
-import { assertEquals } from "https://deno.land/std@0.86.0/testing/asserts.ts"
+import {
+  assertEquals,
+  assertMatch,
+  assertStringIncludes,
+} from "https://deno.land/std@0.86.0/testing/asserts.ts"
 
 const helmPluginDir = path.join(
   import.meta.url.replace("file://", ""),
@@ -68,6 +72,27 @@ Deno.test(
       },
     ])
     assertEquals(status.success, true)
+  }
+)
+
+Deno.test(
+  "helm deno template charts/one-service (error handling: missing selector value)",
+  async () => {
+    const chartPath = path.join(helmPluginDir, "tests/charts/one-service")
+
+    const { status, stdout, stderr } = await runHelmDeno([
+      "template",
+      "my-release-name",
+      chartPath,
+    ])
+
+    assertStringIncludes(stderr, "values.selector is required")
+    assertStringIncludes(
+      stderr,
+      path.join(chartPath, "deno-templates/index.ts")
+    )
+    assertEquals(stdout, "")
+    assertEquals(status.success, false)
   }
 )
 
