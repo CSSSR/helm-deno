@@ -1,4 +1,4 @@
-export async function helmExecute(args: string[]): Promise<void> {
+export async function helmExecute(args: readonly string[]): Promise<void> {
   const helm = Deno.env.get("HELM_BIN") as string
   const cmd = Deno.run({
     cmd: [helm, ...args],

@@ -45,7 +45,7 @@ interface ParseArgsResult {
   readonly helmArgs: readonly string[]
 }
 
-export function parseArgs(args: string[]): ParseArgsResult {
+export function parseArgs(args: readonly string[]): ParseArgsResult {
   const res = parser.parse(args)
   if (res.error) {
     res.error?.errors.forEach((err) => {

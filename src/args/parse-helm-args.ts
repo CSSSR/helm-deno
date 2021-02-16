@@ -1,3 +1,5 @@
+export const supportedCommands = ["upgrade", "template", "install"]
+
 export function parseHelmArgs(
   args: readonly string[]
 ): {
@@ -16,7 +18,7 @@ export function parseHelmArgs(
     command.push(restArgs.shift() as string)
   }
 
-  if (["upgrade", "template", "install"].includes(restArgs[0])) {
+  if (supportedCommands.includes(restArgs[0])) {
     command.push(restArgs.shift() as string)
   }
 

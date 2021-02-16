@@ -1,7 +1,7 @@
 // deno-lint-ignore-file
 import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
 import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
-import { parseHelmArgs } from "./args/parse-helm-args.ts"
+import { parseHelmArgs, supportedCommands } from "./args/parse-helm-args.ts"
 import { parseArgs } from "./args/parse-helm-deno-args.ts"
 import { renderDenoChart } from "./deno/render-chart.ts"
 import { helmExecute } from "./helm/execute.ts"
@@ -10,7 +10,7 @@ import { getChartContext } from "./helm/get-chart-context.ts"
 import { ignoreNotFoundError } from "./utils/ignore-not-found-error.ts"
 
 function helmDenoUsage() {
-  const pluginUsage = `
+  const pluginUsage = `\
 This is a wrapper for "helm [command]". It will use Deno for rendering charts
 before running "helm [command]"
 
@@ -22,14 +22,16 @@ Supported helm [command] is:
   - secrets (helm plugin)
 
 You must use the options of the supported commands in strict order:
-  $ helm [command] [RELEASE] [CHART] [flags]
+  $ helm <secrets> <diff> [${supportedCommands.join(
+    "/"
+  )}] [RELEASE] [CHART] <flags>
 
 Example:
   $ helm deno upgrade <HELM UPGRADE OPTIONS>
 
 Typical usage:
-  $ helm deno upgrade ingress stable/nginx-ingress -f values.yaml
-`
+  $ helm deno upgrade ingress stable/nginx-ingress -f values.yaml`
+
   console.log(pluginUsage)
   Deno.exit(0)
 }
@@ -76,7 +78,28 @@ async function main() {
     options: helmRestArgs,
   } = parseHelmArgs(args)
 
-  // TODO: validate command is allowed
+  debug(
+    `Parsed options:\n${JSON.stringify(
+      {
+        command,
+        releaseName,
+        chartLocation,
+        helmRestArgs,
+      },
+      null,
+      2
+    )}`
+  )
+
+  const lastCommand = command[command.length - 1]
+  if (
+    command.length === 0 ||
+    !supportedCommands.includes(lastCommand) ||
+    lastCommand === "lint"
+  ) {
+    await helmExecute(args)
+    return
+  }
 
   const workdir = await withErrorMsg(
     Deno.makeTempDir({ prefix: "chart-" }),
@@ -104,7 +127,12 @@ async function main() {
     await renderDenoChart(chartContext, workdir)
     debug("Deno templates were successfuly rendered")
 
-    const helmExecuteArgs = [...command, releaseName, workdir, ...helmRestArgs]
+    const helmExecuteArgs = [
+      ...command,
+      ...[releaseName].filter(Boolean),
+      workdir,
+      ...helmRestArgs,
+    ]
     debug(`Executing: ${helmExecuteArgs.join(" ")}`)
     await helmExecute(helmExecuteArgs)
 

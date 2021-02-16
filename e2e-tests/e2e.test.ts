@@ -95,6 +95,58 @@ Deno.test(
   }
 )
 
+Deno.test(
+  "should successfuly run `helm deno lint` with deno chart",
+  async () => {
+    const chartPath = path.join(chartsBin, "one-service")
+
+    const { status, stdout, stderr } = await runHelmDeno(["lint", chartPath])
+
+    assertEquals(stderr, "")
+    assertEquals(
+      stdout.replaceAll(helmPluginDir, ""),
+      `\
+==> Linting /e2e-tests/charts/one-service
+[INFO] values.yaml: file does not exist
+[WARNING] templates/: directory not found
+
+1 chart(s) linted, 0 chart(s) failed
+`
+    )
+    assertEquals(status.success, true)
+  }
+)
+
+Deno.test("should successfuly run `helm deno --help`", async () => {
+  const { status, stdout, stderr } = await runHelmDeno(["--help"])
+
+  assertEquals(stderr, "")
+  assertEquals(
+    stdout,
+    `\
+This is a wrapper for "helm [command]". It will use Deno for rendering charts
+before running "helm [command]"
+
+Supported helm [command] is:
+  - template
+  - install
+  - upgrade
+  - diff (helm plugin)
+  - secrets (helm plugin)
+
+You must use the options of the supported commands in strict order:
+  $ helm <secrets> <diff> [upgrade/template/install] [RELEASE] [CHART] <flags>
+
+Example:
+  $ helm deno upgrade <HELM UPGRADE OPTIONS>
+
+Typical usage:
+  $ helm deno upgrade ingress stable/nginx-ingress -f values.yaml
+`
+  )
+  assertEquals(status.success, true)
+})
+
 Deno.test({
   name: "should successfuly run `helm deno template` with regular chart",
   ignore: !runAllTests,
