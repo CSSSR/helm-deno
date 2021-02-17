@@ -187,41 +187,45 @@ Deno.test({
   },
 })
 
-Deno.test("should support helm-secrets plugin", async () => {
-  const chartPath = path.join(chartsBin, "one-service")
+Deno.test({
+  name: "should support helm-secrets plugin",
+  ignore: !runAllTests,
+  async fn() {
+    const chartPath = path.join(chartsBin, "one-service")
 
-  const { status, stdout, stderr } = await runHelmDeno([
-    "secrets",
-    "template",
-    "my-release-name",
-    chartPath,
-    "--set",
-    "selector.app=my-app",
-  ])
+    const { status, stdout, stderr } = await runHelmDeno([
+      "secrets",
+      "template",
+      "my-release-name",
+      chartPath,
+      "--set",
+      "selector.app=my-app",
+    ])
 
-  assertEquals(stderr, "")
-  assertEquals(yaml.parseAll(stdout), [
-    {
-      apiVersion: "v1",
-      kind: "Service",
-      metadata: {
-        name: "my-release-name",
-      },
-      spec: {
-        ports: [
-          {
-            name: "http",
-            port: 80,
-            targetPort: "http",
+    assertEquals(stderr, "")
+    assertEquals(yaml.parseAll(stdout), [
+      {
+        apiVersion: "v1",
+        kind: "Service",
+        metadata: {
+          name: "my-release-name",
+        },
+        spec: {
+          ports: [
+            {
+              name: "http",
+              port: 80,
+              targetPort: "http",
+            },
+          ],
+          selector: {
+            app: "my-app",
           },
-        ],
-        selector: {
-          app: "my-app",
         },
       },
-    },
-  ])
-  assertEquals(status.success, true)
+    ])
+    assertEquals(status.success, true)
+  },
 })
 
 Deno.test({
