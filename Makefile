@@ -1,15 +1,24 @@
-.PHONY: install fmt test test-all
+.PHONY: build install install-tools install-plugin lint fmt test test-all
 
 HELM=$(shell which helm3 || which helm)
 
 build:
 	bin/deno bundle --unstable src/index.ts bin/bundle.js
 
-install:
+install: install-tools install-plugin
+
+install-tools:
 	@ yarn --frozen-lockfile
+
+install-plugin:
 	@ HELM_PLUGIN_DIR="$$PWD" ./scripts/install.sh v1.4.6
 
+lint:
+	@ yarn prettier --check .
+	@ yarn eslint .
+
 fmt:
+	@ yarn prettier --write .
 	@ yarn eslint --fix .
 
 # Run fast and independant tests

@@ -1,0 +1,19 @@
+name: Lint
+on:
+  push:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: make install-tools
+
+      - name: Run linter
+        run: make lint
+
+      - name: Run editorconfig linter
+        uses: docker://mstruebing/editorconfig-checker:2.3.3

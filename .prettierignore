@@ -1,1 +1,2 @@
-tests/charts/no-deno-chart/templates/service.yaml
+bin/
+e2e-tests/charts/no-deno-chart/templates/service.yaml
