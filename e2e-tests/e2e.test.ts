@@ -202,7 +202,7 @@ Deno.test({
       "selector.app=my-app",
     ])
 
-    assertEquals(stderr, "")
+    assertEquals(stderr.trim(), "")
     assertEquals(yaml.parseAll(stdout), [
       {
         apiVersion: "v1",
@@ -286,7 +286,7 @@ Deno.test({
       "json",
     ])
 
-    assertEquals(stderr, "")
+    assertEquals(stderr.trim(), "")
     const stripAllowUnreleadesWarning = (str: string) =>
       str.split("\n").slice(5).join("\n")
 
