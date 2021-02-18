@@ -1,4 +1,5 @@
 import type { ChartContext } from "../std/mod.ts"
+import { HelmDenoOptions } from "../args/parse-helm-deno-args.ts"
 import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
 import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
 import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
@@ -15,7 +16,8 @@ function stringifyResource(manifest: any): string {
 
 export async function renderDenoChart(
   chartContext: ChartContext,
-  chartPath: string
+  chartPath: string,
+  denoOptions: HelmDenoOptions
 ): Promise<void> {
   const templateFolderPath = path.join(chartPath, "templates")
   await fs.ensureDir(templateFolderPath)
@@ -25,11 +27,51 @@ export async function renderDenoChart(
   if (!isDenoChart) {
     return
   }
+  const pluginFolderPath = Deno.env.get("HELM_PLUGIN_DIR") || ""
 
-  const denoResources = await import(denoTemplateFilePath).then((chart) => {
-    return chart.default(chartContext)
+  const deno = path.join(pluginFolderPath, "bin/deno")
+  const importer = path.join(pluginFolderPath, "src/deno/import-chart.ts")
+
+  const isImportMap = await fs.exists(denoOptions.importMap)
+  const importmap =
+    denoOptions.importMap && isImportMap
+      ? ["--importmap", denoOptions.importMap]
+      : []
+
+  const cmd = Deno.run({
+    cmd: [
+      deno,
+      "run",
+      "--unstable",
+      "--allow-net",
+      "--allow-read",
+      "--allow-write",
+      "--allow-run",
+      "--allow-env",
+      "--quiet",
+      ...importmap,
+      importer,
+      JSON.stringify({
+        chartPath: denoTemplateFilePath,
+        chartContext: chartContext,
+      }),
+    ],
+    stdout: "piped",
+    stderr: "piped",
   })
 
+  const [status, output, error] = await Promise.all([
+    cmd.status(),
+    cmd.output(),
+    cmd.stderrOutput(),
+  ])
+  cmd.close()
+
+  if (!status.success) {
+    return Promise.reject(new TextDecoder().decode(error))
+  }
+
+  const denoResources = JSON.parse(new TextDecoder().decode(output))
   const templates = denoResources.map(stringifyResource).join("\n---\n")
   await Deno.writeTextFile(
     path.join(templateFolderPath, `rendered-deno-templates.yaml`),

@@ -1,7 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.86.0/testing/asserts.ts"
 import { parseArgs } from "../parse-helm-deno-args.ts"
 
-Deno.test("Should parse --deno-log-level flag", () => {
+Deno.test("Should parse --deno-* flags", () => {
   const { options, helmArgs } = parseArgs([
     "upgrade",
     "--install",
@@ -12,10 +12,13 @@ Deno.test("Should parse --deno-log-level flag", () => {
     "--deno-log-level",
     "debug",
     "--deno-keep-tmp-chart",
+    "--deno-importmap",
+    "test/import_map.json",
   ])
 
   assertEquals(options.logLevel, "debug")
   assertEquals(options.keepTmpChart, true)
+  assertEquals(options.importMap, "test/import_map.json")
   assertEquals(helmArgs, [
     "upgrade",
     "--install",
