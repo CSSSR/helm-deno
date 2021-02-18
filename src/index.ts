@@ -37,13 +37,14 @@ Typical usage:
 }
 
 async function copyChart(chartPath: string, destination: string) {
+
   const destinationExists = await fs.exists(chartPath)
   if (!destinationExists) {
     return Promise.reject(`Could not find ${chartPath}`)
   }
   await withErrorMsg(
     fs.copy(chartPath, destination, { overwrite: true }),
-    "Cloud not copy chart directory"
+    "Could not copy chart directory"
   )
 }
 
