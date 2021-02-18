@@ -37,7 +37,6 @@ Typical usage:
 }
 
 async function copyChart(chartPath: string, destination: string) {
-
   const destinationExists = await fs.exists(chartPath)
   if (!destinationExists) {
     return Promise.reject(`Could not find ${chartPath}`)

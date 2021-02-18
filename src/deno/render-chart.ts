@@ -74,7 +74,11 @@ export async function renderDenoChart(
   const denoResources = JSON.parse(new TextDecoder().decode(output))
   const templates = denoResources.map(stringifyResource).join("\n---\n")
   await Deno.writeTextFile(
-    path.join(templateFolderPath, `rendered-deno-templates.yaml`),
+    path.join(templateFolderPath, `import-rendered-templates.yaml`),
+    '{{ .Files.Get "rendered-deno-templates.yaml" }}'
+  )
+  await Deno.writeTextFile(
+    path.join(chartPath, `rendered-deno-templates.yaml`),
     templates
   )
 }
