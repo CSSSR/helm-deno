@@ -27,7 +27,7 @@ jobs:
         run: |
           helm plugin install https://github.com/jkroepke/helm-secrets --version v3.4.1
 
-      - name: Install pugin
+      - name: Install plugin
         run: make install-plugin
 
       - name: Start local kubernetes cluster

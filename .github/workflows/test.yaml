@@ -19,7 +19,7 @@ jobs:
           tar xvf helm.tar.gz linux-amd64/helm
           echo "$PWD/linux-amd64" >> $GITHUB_PATH
 
-      - name: Install pugin
+      - name: Install plugin
         run: make install-plugin
 
       - name: Run tests
