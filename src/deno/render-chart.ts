@@ -32,9 +32,9 @@ export async function renderDenoChart(
   const deno = path.join(pluginFolderPath, "bin/deno")
   const importer = path.join(pluginFolderPath, "src/deno/import-chart.ts")
 
-  const isImportMap = await fs.exists(denoOptions.importMap)
-  const importmap =
-    denoOptions.importMap && isImportMap
+  const hasImportMap = await fs.exists(denoOptions.importMap)
+  const importMapArgs =
+    denoOptions.importMap && hasImportMap
       ? ["--importmap", denoOptions.importMap]
       : []
 
@@ -49,7 +49,7 @@ export async function renderDenoChart(
       "--allow-run",
       "--allow-env",
       "--quiet",
-      ...importmap,
+      ...importMapArgs,
       importer,
       JSON.stringify({
         chartPath: denoTemplateFilePath,
