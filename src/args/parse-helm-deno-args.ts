@@ -37,7 +37,7 @@ const parser = args
     })
   )
   .with(
-    PartialOption("deno-importmap", {
+    PartialOption("deno-import-map", {
       type: Text,
       default: "",
       describe: "Path to import_map.json",
@@ -68,7 +68,7 @@ export function parseArgs(args: readonly string[]): ParseArgsResult {
     options: {
       logLevel: toEnum(res.value?.["deno-log-level"]) || "info",
       keepTmpChart: !!res.value?.["deno-keep-tmp-chart"],
-      importMap: res.value?.["deno-importmap"],
+      importMap: res.value?.["deno-import-map"],
     },
     helmArgs: res.remaining().rawArgs(),
   }

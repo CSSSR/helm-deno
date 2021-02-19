@@ -12,7 +12,7 @@ Deno.test("Should parse --deno-* flags", () => {
     "--deno-log-level",
     "debug",
     "--deno-keep-tmp-chart",
-    "--deno-importmap",
+    "--deno-import-map",
     "test/import_map.json",
   ])
 
