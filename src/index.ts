@@ -144,9 +144,11 @@ async function main() {
         : str.replaceAll(`file://${workdir}`, "<chart-root>")
     }
 
-    // Replace paths in stacktrace with readable value
+    // Replace paths in error or error stacktrace with readable value
     if (err?.stack) {
       err.stack = replaceChartPath(err.stack)
+    } else {
+      err = replaceChartPath(err)
     }
 
     throw err
