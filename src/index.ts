@@ -8,6 +8,7 @@ import { helmExecute } from "./helm/execute.ts"
 import { fetchChart } from "./helm/fetch.ts"
 import { getChartContext } from "./helm/get-chart-context.ts"
 import { ignoreNotFoundError } from "./utils/ignore-not-found-error.ts"
+import { withErrorMsg } from "./std/mod.ts"
 
 function helmDenoUsage() {
   const pluginUsage = `\
@@ -50,10 +51,6 @@ async function copyChart(chartPath: string, destination: string) {
 async function isChartExist(chartPath: string) {
   const chartYamlPath = path.join(chartPath, "Chart.yaml")
   return await fs.exists(chartYamlPath)
-}
-
-function withErrorMsg<T>(p: Promise<T>, msg: string): Promise<T> {
-  return p.catch((err) => Promise.reject(`${msg}: ${err}`))
 }
 
 async function main() {
@@ -107,7 +104,7 @@ async function main() {
   )
 
   debug(`Temporary directory ${workdir} has been created`)
-  const isLocalChart = isChartExist(chartLocation)
+  const isLocalChart = await isChartExist(chartLocation)
 
   try {
     // Fetch chart into temporaty directory
@@ -117,7 +114,7 @@ async function main() {
       debug(`Successfuly copied chart ${chartLocation} to temporary directory`)
     } else {
       debug(`Fetching chart ${chartLocation} to temporary directory`)
-      await fetchChart(chartLocation, workdir)
+      await fetchChart(chartLocation, workdir, args)
       debug(`Successfuly fetched chart ${chartLocation} to temporary directory`)
     }
 
