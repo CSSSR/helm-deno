@@ -150,7 +150,7 @@ async function main() {
     } else if (err?.message) {
       err.message = replaceChartPath(err.message)
     } else if (typeof err === "string") {
-      err = replaceChartPath(err)
+      throw replaceChartPath(err)
     }
 
     throw err
