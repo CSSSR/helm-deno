@@ -3,12 +3,13 @@ import {
   PartialOption,
   BinaryFlag,
 } from "https://deno.land/x/args@2.0.7/flag-types.ts"
-import { Choice } from "https://deno.land/x/args@2.0.7/value-types.ts"
+import { Choice, Text } from "https://deno.land/x/args@2.0.7/value-types.ts"
 
 type LogLevel = "info" | "debug"
 export interface HelmDenoOptions {
   readonly logLevel: LogLevel
   readonly keepTmpChart: boolean
+  readonly importMap: string
 }
 
 const parser = args
@@ -32,6 +33,13 @@ const parser = args
   .with(
     BinaryFlag("deno-keep-tmp-chart", {
       describe: "Keep downloaded chart in temporary directory",
+    })
+  )
+  .with(
+    PartialOption("deno-import-map", {
+      type: Text,
+      default: "",
+      describe: "Path to import_map.json",
     })
   )
 
@@ -59,6 +67,7 @@ export function parseArgs(args: readonly string[]): ParseArgsResult {
     options: {
       logLevel: toEnum(res.value?.["deno-log-level"]) || "info",
       keepTmpChart: !!res.value?.["deno-keep-tmp-chart"],
+      importMap: res.value?.["deno-import-map"],
     },
     helmArgs: res.remaining().rawArgs(),
   }

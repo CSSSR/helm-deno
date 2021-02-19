@@ -43,7 +43,7 @@ async function copyChart(chartPath: string, destination: string) {
   }
   await withErrorMsg(
     fs.copy(chartPath, destination, { overwrite: true }),
-    "Cloud not copy chart directory"
+    "Could not copy chart directory"
   )
 }
 
@@ -124,7 +124,7 @@ async function main() {
     const chartContext = await getChartContext(releaseName, workdir, args)
     debug(`Chart context:\n${JSON.stringify(chartContext, null, 2)}`)
 
-    await renderDenoChart(chartContext, workdir)
+    await renderDenoChart(chartContext, workdir, options)
     debug("Deno templates were successfuly rendered")
 
     const helmExecuteArgs = [
@@ -144,9 +144,13 @@ async function main() {
         : str.replaceAll(`file://${workdir}`, "<chart-root>")
     }
 
-    // Replace paths in stacktrace with readable value
+    // Replace paths in error or error stacktrace with readable value
     if (err?.stack) {
       err.stack = replaceChartPath(err.stack)
+    } else if (err?.message) {
+      err.message = replaceChartPath(err.message)
+    } else if (typeof err === "string") {
+      throw replaceChartPath(err)
     }
 
     throw err
