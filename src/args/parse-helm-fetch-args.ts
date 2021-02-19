@@ -1,16 +1,28 @@
 import args from "https://deno.land/x/args@2.0.7/wrapper.ts"
-import { CollectOption } from "https://deno.land/x/args@2.0.7/flag-types.ts"
+import {
+  PartialOption,
+  BinaryFlag,
+} from "https://deno.land/x/args@2.0.7/flag-types.ts"
 import { Text } from "https://deno.land/x/args@2.0.7/value-types.ts"
 
 const textOption = (flag: string, alias?: readonly string[]) =>
-  CollectOption(flag, {
+  PartialOption(flag, {
     type: Text,
-    alias,
+    default: "",
   })
 
 const parser = args
   .describe("")
+  .with(textOption("ca-file"))
+  .with(textOption("cert-file"))
+  .with(BinaryFlag("devel"))
+  .with(BinaryFlag("insecure-skip-tls-verify"))
+  .with(textOption("key-file"))
+  .with(textOption("keyring"))
+  .with(textOption("password"))
   .with(textOption("repo"))
+  .with(textOption("username"))
+  .with(BinaryFlag("verify"))
   .with(textOption("version"))
 
 export function parseHelmFetchArgs(args: readonly string[]): readonly string[] {
