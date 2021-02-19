@@ -2,7 +2,6 @@ import args from "https://deno.land/x/args@2.0.7/wrapper.ts"
 import {
   PartialOption,
   BinaryFlag,
-  Option,
 } from "https://deno.land/x/args@2.0.7/flag-types.ts"
 import { Choice, Text } from "https://deno.land/x/args@2.0.7/value-types.ts"
 
