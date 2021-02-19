@@ -1,5 +1,8 @@
 # helm-deno
 
+> **⚠️ Work in progress, breaking changes are to be expected ⚠️**  
+> There is also no documentation yet but we'll write some in upcoming weeks
+
 helm-deno allows write helm charts with JavaScript and TypeScript
 
 ## Current limitations
