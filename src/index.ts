@@ -147,7 +147,9 @@ async function main() {
     // Replace paths in error or error stacktrace with readable value
     if (err?.stack) {
       err.stack = replaceChartPath(err.stack)
-    } else {
+    } else if (err?.message) {
+      err.message = replaceChartPath(err.message)
+    } else if (typeof err === "string") {
       err = replaceChartPath(err)
     }
 
