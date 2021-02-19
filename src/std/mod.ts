@@ -12,3 +12,7 @@ export interface ChartContext {
   // deno-lint-ignore no-explicit-any
   values: any
 }
+
+export function withErrorMsg<T>(p: Promise<T>, msg: string): Promise<T> {
+  return p.catch((err) => Promise.reject(`${msg}: ${err}`))
+}
