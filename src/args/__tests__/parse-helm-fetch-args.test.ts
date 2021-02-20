@@ -40,6 +40,12 @@ Deno.test("Should parse helm fetch args", () => {
     "--verify",
     "--version",
     "0.0.1",
+    "--registry-config",
+    "registry.json",
+    "--repository-cache",
+    "/repository",
+    "--repository-config",
+    "repositorites.yaml",
     "--deno-log-level",
     "debug",
   ])
@@ -64,5 +70,11 @@ Deno.test("Should parse helm fetch args", () => {
     "--verify",
     "--version",
     "0.0.1",
+    "--registry-config",
+    "registry.json",
+    "--repository-cache",
+    "/repository",
+    "--repository-config",
+    "repositorites.yaml",
   ])
 })

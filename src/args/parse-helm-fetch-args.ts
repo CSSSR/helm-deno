@@ -24,6 +24,9 @@ const parser = args
   .with(textOption("username"))
   .with(BinaryFlag("verify"))
   .with(textOption("version"))
+  .with(textOption("registry-config"))
+  .with(textOption("repository-cache"))
+  .with(textOption("repository-config"))
 
 export function parseHelmFetchArgs(args: readonly string[]): readonly string[] {
   const res = parser.parse(args)
