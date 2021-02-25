@@ -1,3 +1,5 @@
+import { getAvailablePort } from "https://deno.land/x/port/mod.ts"
+import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
 import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
 import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
 import {
@@ -133,6 +135,7 @@ Supported helm [command] is:
   - upgrade
   - diff (helm plugin)
   - secrets (helm plugin)
+  - push (helm plugin)
 
 You must use the options of the supported commands in strict order:
   $ helm <secrets> <diff> [upgrade/template/install] [RELEASE] [CHART] <flags>
@@ -300,5 +303,151 @@ Deno.test({
       },
     ])
     assertEquals(status.success, true)
+  },
+})
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
+async function startHelmRegistry() {
+  const port = await getAvailablePort()
+  const cmd = Deno.run({
+    cmd: [
+      "docker",
+      "run",
+      "--rm",
+      "--detach",
+      `--publish=${port}:8080`,
+      "--env=STORAGE=local",
+      "--env=STORAGE_LOCAL_ROOTDIR=/home/chartmuseum/charts",
+      "chartmuseum/chartmuseum:v0.12.0@sha256:38c5ec3b30046d7a02a55b4c8bd8a0cd279538c2e36090973798a858e900b18e",
+    ],
+    stdout: "piped",
+    stderr: "piped",
+  })
+
+  const [status, stdout, stderr] = await Promise.all([
+    cmd.status(),
+    cmd.output(),
+    cmd.stderrOutput(),
+  ])
+  cmd.close()
+
+  if (!status.success) {
+    throw new Error(
+      `Could not start chartmuseum ${new TextDecoder().decode(stderr)}`
+    )
+  }
+  const containerID = new TextDecoder().decode(stdout)
+
+  let errorsCount = 0
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    if (errorsCount > 100) {
+      throw new Error("To many errors")
+    }
+    try {
+      const response = await fetch(`http://localhost:${port}/health`)
+      const json = await response.json()
+      if (json.healthy) {
+        break
+      }
+    } catch {
+      errorsCount++
+    }
+    await sleep(200)
+  }
+
+  return {
+    url: `http://localhost:${port}`,
+    async stop() {
+      // There is an error "response from daemon: 404 page not found"
+      // with full ID not sure why
+      const shortContainerID = containerID.slice(0, 12)
+      const cmd = Deno.run({
+        cmd: ["docker", "stop", shortContainerID],
+        stdout: "piped",
+        stderr: "piped",
+      })
+
+      const [status, , stderr] = await Promise.all([
+        cmd.status(),
+        cmd.output(),
+        cmd.stderrOutput(),
+      ])
+      cmd.close()
+
+      if (!status.success) {
+        const dockerStopError = new TextDecoder().decode(stderr)
+        throw new Error(
+          `Could not stop helm registry docker container ${containerID} ${dockerStopError}`
+        )
+      }
+    },
+  }
+}
+
+Deno.test({
+  name: "should precompile chart during helm deno push",
+  ignore: !runAllTests,
+  async fn() {
+    const helmRegistry = await startHelmRegistry()
+    const fetchDirectory = await Deno.makeTempDir({
+      prefix: "helm-deno-tests-",
+    })
+
+    try {
+      const chartPath = path.join(chartsBin, "one-service")
+
+      const { status, stderr } = await runHelmDeno([
+        "push",
+        chartPath,
+        helmRegistry.url,
+      ])
+
+      if (!status.success) {
+        console.log(stderr)
+      }
+      assertEquals(status.success, true, "should successfully push")
+
+      const isDenoBundleExists = await fs.exists(
+        path.join(chartPath, "deno-bundle.js")
+      )
+      assertEquals(
+        isDenoBundleExists,
+        false,
+        "should not have left temporary file deno-bundle.js"
+      )
+
+      const fetchResult = await runHelmDeno([
+        "fetch",
+        "one-service",
+        "--repo",
+        helmRegistry.url,
+        "--untar",
+        "--untardir",
+        fetchDirectory,
+      ])
+      assertEquals(
+        fetchResult.status.success,
+        true,
+        "should successfully fetch"
+      )
+
+      const isDenoBundleInFetchedChartExists = await fs.exists(
+        path.join(fetchDirectory, "one-service/deno-bundle.js")
+      )
+      assertEquals(
+        isDenoBundleInFetchedChartExists,
+        true,
+        "should have file deno-bundle.js in fetched chart"
+      )
+    } finally {
+      await Deno.remove(fetchDirectory, { recursive: true })
+      await helmRegistry.stop()
+    }
   },
 })

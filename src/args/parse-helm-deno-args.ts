@@ -10,6 +10,7 @@ export interface HelmDenoOptions {
   readonly logLevel: LogLevel
   readonly keepTmpChart: boolean
   readonly importMap: string
+  readonly useBundle: boolean
 }
 
 const parser = args
@@ -42,6 +43,12 @@ const parser = args
       describe: "Path to import_map.json",
     })
   )
+  .with(
+    BinaryFlag("deno-use-bundle", {
+      describe:
+        "Use prebundled chart. File <chart>/deno-bundle.js is required for that. deno-bundle.js is automaticly created by `helm deno push`",
+    })
+  )
 
 function toEnum<T>(value: string): T {
   // deno-lint-ignore no-explicit-any
@@ -68,6 +75,7 @@ export function parseArgs(args: readonly string[]): ParseArgsResult {
       logLevel: toEnum(res.value?.["deno-log-level"]) || "info",
       keepTmpChart: !!res.value?.["deno-keep-tmp-chart"],
       importMap: res.value?.["deno-import-map"],
+      useBundle: !!res.value?.["deno-keep-tmp-chart"],
     },
     helmArgs: res.remaining().rawArgs(),
   }

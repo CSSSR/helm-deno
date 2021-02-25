@@ -10,6 +10,16 @@ export function parseHelmArgs(
 } {
   const restArgs = args.slice()
   const command: string[] = []
+
+  if (restArgs[0] === "push") {
+    return {
+      command: ["push"],
+      releaseName: "",
+      chartLocation: restArgs[1],
+      options: restArgs.slice(2),
+    }
+  }
+
   if (restArgs[0] === "secrets") {
     command.push(restArgs.shift() as string)
   }

@@ -14,11 +14,13 @@ Deno.test("Should parse --deno-* flags", () => {
     "--deno-keep-tmp-chart",
     "--deno-import-map",
     "test/import_map.json",
+    "--deno-use-bundle",
   ])
 
   assertEquals(options.logLevel, "debug")
   assertEquals(options.keepTmpChart, true)
   assertEquals(options.importMap, "test/import_map.json")
+  assertEquals(options.useBundle, true)
   assertEquals(helmArgs, [
     "upgrade",
     "--install",

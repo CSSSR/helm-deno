@@ -135,3 +135,25 @@ Deno.test(
     assertEquals(res, expected)
   }
 )
+
+Deno.test(
+  "Should parse helm template args for `helm push ./chart http://localhost:8080`",
+  () => {
+    const res = parseHelmArgs([
+      "push",
+      "./chart",
+      "http://localhost:8080",
+      "--version",
+      "1.0.0",
+    ])
+
+    const expected: ReturnType<typeof parseHelmArgs> = {
+      command: ["push"],
+      releaseName: "",
+      chartLocation: "./chart",
+      options: ["http://localhost:8080", "--version", "1.0.0"],
+    }
+
+    assertEquals(res, expected)
+  }
+)

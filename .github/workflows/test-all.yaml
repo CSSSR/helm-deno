@@ -27,6 +27,10 @@ jobs:
         run: |
           helm plugin install https://github.com/jkroepke/helm-secrets --version v3.4.1
 
+      - name: Install helm-push
+        run: |
+          helm plugin install https://github.com/chartmuseum/helm-push --version v0.9.0
+
       - name: Install plugin
         run: make install-plugin
 

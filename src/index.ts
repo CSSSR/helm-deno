@@ -3,7 +3,11 @@ import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
 import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
 import { parseHelmArgs, supportedCommands } from "./args/parse-helm-args.ts"
 import { parseArgs } from "./args/parse-helm-deno-args.ts"
-import { renderDenoChart } from "./deno/render-chart.ts"
+import {
+  bundleChart,
+  cleanupBundle,
+  renderDenoChart,
+} from "./deno/render-chart.ts"
 import { helmExecute } from "./helm/execute.ts"
 import { fetchChart } from "./helm/fetch.ts"
 import { getChartContext } from "./helm/get-chart-context.ts"
@@ -21,6 +25,7 @@ Supported helm [command] is:
   - upgrade
   - diff (helm plugin)
   - secrets (helm plugin)
+  - push (helm plugin)
 
 You must use the options of the supported commands in strict order:
   $ helm <secrets> <diff> [${supportedCommands.join(
@@ -88,12 +93,18 @@ async function main() {
     )}`
   )
 
+  if (command.length === 1 && command[0] === "push") {
+    try {
+      await bundleChart(chartLocation, options)
+      await helmExecute(["push", chartLocation, ...helmRestArgs])
+    } finally {
+      await cleanupBundle(chartLocation, options)
+    }
+    return
+  }
+
   const lastCommand = command[command.length - 1]
-  if (
-    command.length === 0 ||
-    !supportedCommands.includes(lastCommand) ||
-    lastCommand === "lint"
-  ) {
+  if (command.length === 0 || !supportedCommands.includes(lastCommand)) {
     await helmExecute(args)
     return
   }

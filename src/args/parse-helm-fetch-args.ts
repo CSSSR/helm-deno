@@ -5,7 +5,7 @@ import {
 } from "https://deno.land/x/args@2.0.7/flag-types.ts"
 import { Text } from "https://deno.land/x/args@2.0.7/value-types.ts"
 
-const textOption = (flag: string, alias?: readonly string[]) =>
+const textOption = (flag: string) =>
   PartialOption(flag, {
     type: Text,
     default: "",

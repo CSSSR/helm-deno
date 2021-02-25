@@ -1,8 +1,9 @@
 import type { ChartContext } from "../std/mod.ts"
-import { HelmDenoOptions } from "../args/parse-helm-deno-args.ts"
+import type { HelmDenoOptions } from "../args/parse-helm-deno-args.ts"
 import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
 import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
 import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
+import { ignoreNotFoundError } from "../utils/ignore-not-found-error.ts"
 
 // deno-lint-ignore no-explicit-any
 function stringifyResource(manifest: any): string {
@@ -14,29 +15,102 @@ function stringifyResource(manifest: any): string {
   })
 }
 
+async function getImportMapFlags(denoOptions: HelmDenoOptions) {
+  if (!denoOptions.importMap) {
+    return []
+  }
+
+  const hasImportMap = await fs.exists(denoOptions.importMap)
+
+  if (!hasImportMap) {
+    throw new Error(`Could not find import map ${denoOptions.importMap}`)
+  }
+
+  const importMapArgs =
+    denoOptions.importMap && hasImportMap
+      ? ["--importmap", denoOptions.importMap]
+      : []
+
+  return importMapArgs
+}
+
+function getPaths(chartPath: string, denoOptions: HelmDenoOptions) {
+  const pluginFolderPath = Deno.env.get("HELM_PLUGIN_DIR") || ""
+  const bundlePath = path.join(chartPath, "deno-bundle.js")
+  const indexFilePath = path.join(chartPath, "deno-templates/index.ts")
+  const denoTemplateFilePath = denoOptions.useBundle
+    ? bundlePath
+    : indexFilePath
+  return {
+    pluginFolderPath,
+    bundlePath,
+    indexFilePath,
+    denoTemplateFilePath,
+    templateFolderPath: path.join(chartPath, "templates"),
+    deno: path.join(pluginFolderPath, "bin/deno"),
+    importer: path.join(pluginFolderPath, "src/deno/import-chart.ts"),
+  }
+}
+
+export async function bundleChart(
+  chartPath: string,
+  denoOptions: HelmDenoOptions
+): Promise<void> {
+  const { deno, bundlePath, indexFilePath } = getPaths(chartPath, denoOptions)
+  const cmd = Deno.run({
+    cmd: [
+      deno,
+      "bundle",
+      "--unstable",
+      "--quiet",
+      ...(await getImportMapFlags(denoOptions)),
+      indexFilePath,
+      bundlePath,
+    ],
+    stdout: "piped",
+    stderr: "piped",
+  })
+
+  const [status, , error] = await Promise.all([
+    cmd.status(),
+    cmd.output(),
+    cmd.stderrOutput(),
+  ])
+  cmd.close()
+
+  if (!status.success) {
+    throw new Error(new TextDecoder().decode(error))
+  }
+}
+
+export async function cleanupBundle(
+  chartPath: string,
+  denoOptions: HelmDenoOptions
+): Promise<void> {
+  const { bundlePath } = getPaths(chartPath, denoOptions)
+  await ignoreNotFoundError(Deno.remove(bundlePath))
+}
+
 export async function renderDenoChart(
   chartContext: ChartContext,
   chartPath: string,
   denoOptions: HelmDenoOptions
 ): Promise<void> {
-  const templateFolderPath = path.join(chartPath, "templates")
+  const {
+    deno,
+    importer,
+    templateFolderPath,
+    bundlePath,
+    indexFilePath,
+    denoTemplateFilePath,
+  } = getPaths(chartPath, denoOptions)
   await fs.ensureDir(templateFolderPath)
 
-  const denoTemplateFilePath = path.join(chartPath, "deno-templates/index.ts")
-  const isDenoChart = await fs.exists(denoTemplateFilePath)
+  const isDenoChart =
+    (await fs.exists(bundlePath)) || (await fs.exists(indexFilePath))
   if (!isDenoChart) {
     return
   }
-  const pluginFolderPath = Deno.env.get("HELM_PLUGIN_DIR") || ""
-
-  const deno = path.join(pluginFolderPath, "bin/deno")
-  const importer = path.join(pluginFolderPath, "src/deno/import-chart.ts")
-
-  const hasImportMap = await fs.exists(denoOptions.importMap)
-  const importMapArgs =
-    denoOptions.importMap && hasImportMap
-      ? ["--importmap", denoOptions.importMap]
-      : []
 
   const cmd = Deno.run({
     cmd: [
@@ -49,7 +123,7 @@ export async function renderDenoChart(
       "--allow-run",
       "--allow-env",
       "--quiet",
-      ...importMapArgs,
+      ...(await getImportMapFlags(denoOptions)),
       importer,
       JSON.stringify({
         chartPath: denoTemplateFilePath,
