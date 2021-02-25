@@ -98,7 +98,7 @@ async function main() {
       await bundleChart(chartLocation, options)
       await helmExecute(["push", chartLocation, ...helmRestArgs])
     } finally {
-      await cleanupBundle(chartLocation, options)
+      await cleanupBundle(chartLocation)
     }
     return
   }

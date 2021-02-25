@@ -37,9 +37,9 @@ async function runHelmDeno(args: string[]) {
   return { status, stdout: toText(output), stderr: toText(error) }
 }
 
-Deno.test(
-  "should successfuly run `helm deno template` with deno chart",
-  async () => {
+Deno.test({
+  name: "should successfuly run `helm deno template` with deno chart",
+  async fn() {
     const chartPath = path.join(chartsBin, "one-service")
 
     const { status, stdout, stderr } = await runHelmDeno([
@@ -73,8 +73,8 @@ Deno.test(
       },
     ])
     assertEquals(status.success, true)
-  }
-)
+  },
+})
 
 Deno.test(
   "should handle error in deno chart during `helm deno template`",
@@ -453,7 +453,7 @@ Deno.test({
 })
 
 Deno.test({
-  name: "should use deno-bundle.js if --deno-use-bundle flag have been passed",
+  name: "should use deno-bundle.js if `--deno-bundle require` have been passed",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")
 
@@ -461,7 +461,8 @@ Deno.test({
       "template",
       "my-release-name",
       chartPath,
-      "--deno-use-bundle",
+      "--deno-bundle",
+      "require",
     ])
 
     assertEquals(stderr, "")
@@ -480,7 +481,63 @@ Deno.test({
 
 Deno.test({
   name:
-    "should use deno-templates/index.ts if --deno-use-bundle flag have not been passed",
+    "should use deno-bundle.js if `--deno-bundle prefer` have been passed and deno-bundle.js exists",
+  async fn() {
+    const chartPath = path.join(chartsBin, "prebundled")
+
+    const { status, stdout, stderr } = await runHelmDeno([
+      "template",
+      "my-release-name",
+      chartPath,
+      "--deno-bundle",
+      "prefer",
+    ])
+
+    assertEquals(stderr, "")
+    assertEquals(yaml.parseAll(stdout), [
+      {
+        kind: "ServiceAccount",
+        apiVersion: "v1",
+        metadata: {
+          name: "prebundled",
+        },
+      },
+    ])
+    assertEquals(status.success, true)
+  },
+})
+
+Deno.test({
+  name:
+    "should use deno-templates/index.ts if `--deno-bundle ignore` have been passed",
+  async fn() {
+    const chartPath = path.join(chartsBin, "prebundled")
+
+    const { status, stdout, stderr } = await runHelmDeno([
+      "template",
+      "my-release-name",
+      chartPath,
+      "--deno-bundle",
+      "ignore",
+    ])
+
+    assertEquals(stderr, "")
+    assertEquals(yaml.parseAll(stdout), [
+      {
+        kind: "ServiceAccount",
+        apiVersion: "v1",
+        metadata: {
+          name: "not-bundled",
+        },
+      },
+    ])
+    assertEquals(status.success, true)
+  },
+})
+
+Deno.test({
+  name:
+    "should use deno-templates/index.ts if --deno-bundle have not been passed",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")
 

@@ -6,11 +6,13 @@ import {
 import { Choice, Text } from "https://deno.land/x/args@2.0.7/value-types.ts"
 
 type LogLevel = "info" | "debug"
+
+type BundlePolicy = "ignore" | "prefer" | "require"
 export interface HelmDenoOptions {
   readonly logLevel: LogLevel
   readonly keepTmpChart: boolean
   readonly importMap: string
-  readonly useBundle: boolean
+  readonly bundlePolicy: BundlePolicy
 }
 
 const parser = args
@@ -27,7 +29,7 @@ const parser = args
           describe: "Log only important",
         }
       ),
-      default: "info",
+      default: "info" as LogLevel,
       describe: "Log level",
     })
   )
@@ -44,16 +46,26 @@ const parser = args
     })
   )
   .with(
-    BinaryFlag("deno-use-bundle", {
-      describe:
-        "Use prebundled chart. File <chart>/deno-bundle.js is required for that. deno-bundle.js is automaticly created by `helm deno push`",
+    PartialOption("deno-bundle", {
+      type: Choice<BundlePolicy>(
+        {
+          value: "ignore",
+          describe: "Do not use prebundled code. This is a default behavior",
+        },
+        {
+          value: "require",
+          describe:
+            "Require chart to be prebundled, exit with status code 1 otherwise ",
+        },
+        {
+          value: "prefer",
+          describe: "Use deno-bundle.js if it exists",
+        }
+      ),
+      default: "ignore" as BundlePolicy,
+      describe: "Use prebundled chart code instead of original one",
     })
   )
-
-function toEnum<T>(value: string): T {
-  // deno-lint-ignore no-explicit-any
-  return value as any
-}
 
 interface ParseArgsResult {
   readonly options: HelmDenoOptions
@@ -72,10 +84,10 @@ export function parseArgs(args: readonly string[]): ParseArgsResult {
 
   return {
     options: {
-      logLevel: toEnum(res.value?.["deno-log-level"]) || "info",
+      logLevel: res.value?.["deno-log-level"],
       keepTmpChart: !!res.value?.["deno-keep-tmp-chart"],
       importMap: res.value?.["deno-import-map"],
-      useBundle: !!res.value?.["deno-use-bundle"],
+      bundlePolicy: res.value?.["deno-bundle"],
     },
     helmArgs: res.remaining().rawArgs(),
   }

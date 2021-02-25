@@ -34,18 +34,38 @@ async function getImportMapFlags(denoOptions: HelmDenoOptions) {
   return importMapArgs
 }
 
-function getPaths(chartPath: string, denoOptions: HelmDenoOptions) {
+async function getDenoTemplateFilePath(
+  chartPath: string,
+  denoOptions: HelmDenoOptions
+) {
+  const { bundlePath, indexFilePath } = getPaths(chartPath)
+  if (denoOptions.bundlePolicy === "ignore") {
+    return indexFilePath
+  }
+
+  const bundleExists = await fs.exists(bundlePath)
+
+  if (denoOptions.bundlePolicy === "require") {
+    if (!bundleExists) {
+      throw new Error("Bundle for chart does not exist")
+    }
+    return bundlePath
+  }
+
+  if (denoOptions.bundlePolicy === "prefer") {
+    return bundleExists ? bundlePath : indexFilePath
+  }
+}
+
+function getPaths(chartPath: string) {
   const pluginFolderPath = Deno.env.get("HELM_PLUGIN_DIR") || ""
   const bundlePath = path.join(chartPath, "deno-bundle.js")
   const indexFilePath = path.join(chartPath, "deno-templates/index.ts")
-  const denoTemplateFilePath = denoOptions.useBundle
-    ? bundlePath
-    : indexFilePath
+
   return {
     pluginFolderPath,
     bundlePath,
     indexFilePath,
-    denoTemplateFilePath,
     templateFolderPath: path.join(chartPath, "templates"),
     deno: path.join(pluginFolderPath, "bin/deno"),
     importer: path.join(pluginFolderPath, "src/deno/import-chart.ts"),
@@ -56,7 +76,7 @@ export async function bundleChart(
   chartPath: string,
   denoOptions: HelmDenoOptions
 ): Promise<void> {
-  const { deno, bundlePath, indexFilePath } = getPaths(chartPath, denoOptions)
+  const { deno, bundlePath, indexFilePath } = getPaths(chartPath)
   const cmd = Deno.run({
     cmd: [
       deno,
@@ -83,11 +103,8 @@ export async function bundleChart(
   }
 }
 
-export async function cleanupBundle(
-  chartPath: string,
-  denoOptions: HelmDenoOptions
-): Promise<void> {
-  const { bundlePath } = getPaths(chartPath, denoOptions)
+export async function cleanupBundle(chartPath: string): Promise<void> {
+  const { bundlePath } = getPaths(chartPath)
   await ignoreNotFoundError(Deno.remove(bundlePath))
 }
 
@@ -102,8 +119,7 @@ export async function renderDenoChart(
     templateFolderPath,
     bundlePath,
     indexFilePath,
-    denoTemplateFilePath,
-  } = getPaths(chartPath, denoOptions)
+  } = getPaths(chartPath)
   await fs.ensureDir(templateFolderPath)
 
   const isDenoChart =
@@ -111,6 +127,11 @@ export async function renderDenoChart(
   if (!isDenoChart) {
     return
   }
+
+  const denoTemplateFilePath = await getDenoTemplateFilePath(
+    chartPath,
+    denoOptions
+  )
 
   const cmd = Deno.run({
     cmd: [
