@@ -451,3 +451,55 @@ Deno.test({
     }
   },
 })
+
+Deno.test({
+  name: "should use deno-bundle.js if --deno-use-bundle flag have been passed",
+  async fn() {
+    const chartPath = path.join(chartsBin, "prebundled")
+
+    const { status, stdout, stderr } = await runHelmDeno([
+      "template",
+      "my-release-name",
+      chartPath,
+      "--deno-use-bundle",
+    ])
+
+    assertEquals(stderr, "")
+    assertEquals(yaml.parseAll(stdout), [
+      {
+        kind: "ServiceAccount",
+        apiVersion: "v1",
+        metadata: {
+          name: "prebundled",
+        },
+      },
+    ])
+    assertEquals(status.success, true)
+  },
+})
+
+Deno.test({
+  name:
+    "should use deno-templates/index.ts if --deno-use-bundle flag have not been passed",
+  async fn() {
+    const chartPath = path.join(chartsBin, "prebundled")
+
+    const { status, stdout, stderr } = await runHelmDeno([
+      "template",
+      "my-release-name",
+      chartPath,
+    ])
+
+    assertEquals(stderr, "")
+    assertEquals(yaml.parseAll(stdout), [
+      {
+        kind: "ServiceAccount",
+        apiVersion: "v1",
+        metadata: {
+          name: "not-bundled",
+        },
+      },
+    ])
+    assertEquals(status.success, true)
+  },
+})

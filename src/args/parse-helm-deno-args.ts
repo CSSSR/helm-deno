@@ -75,7 +75,7 @@ export function parseArgs(args: readonly string[]): ParseArgsResult {
       logLevel: toEnum(res.value?.["deno-log-level"]) || "info",
       keepTmpChart: !!res.value?.["deno-keep-tmp-chart"],
       importMap: res.value?.["deno-import-map"],
-      useBundle: !!res.value?.["deno-keep-tmp-chart"],
+      useBundle: !!res.value?.["deno-use-bundle"],
     },
     helmArgs: res.remaining().rawArgs(),
   }
