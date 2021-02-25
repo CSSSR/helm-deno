@@ -560,3 +560,106 @@ Deno.test({
     assertEquals(status.success, true)
   },
 })
+
+Deno.test({
+  name:
+    "should throw error if`--deno-bundle require` have been passed but deno-bundle.js do not exist",
+  async fn() {
+    const chartPath = path.join(chartsBin, "one-service")
+
+    const { status, stderr } = await runHelmDeno([
+      "template",
+      "my-release-name",
+      chartPath,
+      "--deno-bundle",
+      "require",
+    ])
+
+    assertEquals(status.success, false)
+    assertStringIncludes(stderr, "Bundle for chart does not exist")
+  },
+})
+
+Deno.test({
+  name:
+    "should not throw error if`--deno-bundle prefer` have been passed and deno-bundle.js do not exist",
+  async fn() {
+    const chartPath = path.join(chartsBin, "one-service")
+
+    const { status, stdout, stderr } = await runHelmDeno([
+      "template",
+      "my-release-name",
+      chartPath,
+      "--set",
+      "selector.app=my-app",
+      "--deno-bundle",
+      "prefer",
+    ])
+
+    assertEquals(stderr, "")
+    assertEquals(yaml.parseAll(stdout), [
+      {
+        apiVersion: "v1",
+        kind: "Service",
+        metadata: {
+          name: "my-release-name",
+        },
+        spec: {
+          ports: [
+            {
+              name: "http",
+              port: 80,
+              targetPort: "http",
+            },
+          ],
+          selector: {
+            app: "my-app",
+          },
+        },
+      },
+    ])
+    assertEquals(status.success, true)
+  },
+})
+
+Deno.test({
+  name: "should ignore --deno-bundle flag for regular charts",
+  ignore: !runAllTests,
+  async fn() {
+    const chartPath = path.join(chartsBin, "no-deno-chart")
+
+    const { status, stdout, stderr } = await runHelmDeno([
+      "template",
+      "my-release-name",
+      chartPath,
+      "--set",
+      "selector.app=my-app",
+      "--deno-bundle",
+      "require",
+    ])
+
+    assertEquals(stderr, "")
+    assertEquals(yaml.parseAll(stdout), [
+      {
+        apiVersion: "v1",
+        kind: "Service",
+        metadata: {
+          name: "my-release-name",
+        },
+        spec: {
+          ports: [
+            {
+              name: "http",
+              port: 80,
+              targetPort: "http",
+            },
+          ],
+          selector: {
+            app: "my-app",
+          },
+        },
+      },
+    ])
+    assertEquals(status.success, true)
+  },
+})
