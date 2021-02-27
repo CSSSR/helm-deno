@@ -1,4 +1,4 @@
-import { getAvailablePort } from "https://deno.land/x/port/mod.ts"
+import { getAvailablePort } from "https://deno.land/x/port@1.0.0/mod.ts"
 import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
 import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
 import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
@@ -17,9 +17,9 @@ function toText(bytes: Uint8Array): string {
   return new TextDecoder().decode(bytes)
 }
 
-async function runHelmDeno(args: string[]) {
+async function run(args: string[]) {
   const cmd = Deno.run({
-    cmd: [helmDenoBin, ...args],
+    cmd: args,
     env: {
       HELM_PLUGIN_DIR: helmPluginDir,
     },
@@ -35,6 +35,14 @@ async function runHelmDeno(args: string[]) {
   cmd.close()
 
   return { status, stdout: toText(output), stderr: toText(error) }
+}
+
+async function runHelm(args: string[]) {
+  return await run([Deno.env.get("HELM_BIN") as string, ...args])
+}
+
+async function runHelmDeno(args: string[]) {
+  return await run([helmDenoBin, ...args])
 }
 
 Deno.test({
@@ -314,39 +322,26 @@ function sleep(ms: number): Promise<void> {
 
 async function startHelmRegistry() {
   const port = await getAvailablePort()
-  const cmd = Deno.run({
-    cmd: [
-      "docker",
-      "run",
-      "--rm",
-      "--detach",
-      `--publish=${port}:8080`,
-      "--env=STORAGE=local",
-      "--env=STORAGE_LOCAL_ROOTDIR=/home/chartmuseum/charts",
-      "chartmuseum/chartmuseum:v0.12.0@sha256:38c5ec3b30046d7a02a55b4c8bd8a0cd279538c2e36090973798a858e900b18e",
-    ],
-    stdout: "piped",
-    stderr: "piped",
-  })
-
-  const [status, stdout, stderr] = await Promise.all([
-    cmd.status(),
-    cmd.output(),
-    cmd.stderrOutput(),
+  const { status, stdout, stderr } = await run([
+    "docker",
+    "run",
+    "--rm",
+    "--detach",
+    `--publish=${port}:8080`,
+    "--env=STORAGE=local",
+    "--env=STORAGE_LOCAL_ROOTDIR=/home/chartmuseum/charts",
+    "chartmuseum/chartmuseum:v0.12.0@sha256:38c5ec3b30046d7a02a55b4c8bd8a0cd279538c2e36090973798a858e900b18e",
   ])
-  cmd.close()
 
   if (!status.success) {
-    throw new Error(
-      `Could not start chartmuseum ${new TextDecoder().decode(stderr)}`
-    )
+    throw new Error(`Could not start chartmuseum ${stderr}`)
   }
-  const containerID = new TextDecoder().decode(stdout)
+  const containerID = stdout.trim()
 
   let errorsCount = 0
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    if (errorsCount > 100) {
+    if (errorsCount > 10) {
       throw new Error("To many errors")
     }
     try {
@@ -364,24 +359,10 @@ async function startHelmRegistry() {
   return {
     url: `http://localhost:${port}`,
     async stop() {
-      // There is an error "response from daemon: 404 page not found"
-      // with full ID not sure why
-      const shortContainerID = containerID.slice(0, 12)
-      const cmd = Deno.run({
-        cmd: ["docker", "stop", shortContainerID],
-        stdout: "piped",
-        stderr: "piped",
-      })
-
-      const [status, , stderr] = await Promise.all([
-        cmd.status(),
-        cmd.output(),
-        cmd.stderrOutput(),
-      ])
-      cmd.close()
+      const { status, stderr } = await run(["docker", "stop", containerID])
 
       if (!status.success) {
-        const dockerStopError = new TextDecoder().decode(stderr)
+        const dockerStopError = stderr
         throw new Error(
           `Could not stop helm registry docker container ${containerID} ${dockerStopError}`
         )
@@ -661,5 +642,69 @@ Deno.test({
       },
     ])
     assertEquals(status.success, true)
+  },
+})
+
+Deno.test({
+  name:
+    "should successfuly run `helm deno template` with remote deno chart (with --repo option)",
+  ignore: !runAllTests,
+  async fn() {
+    const { status } = await runHelmDeno([
+      "template",
+      "ingress",
+      "nginx-ingress",
+      "--repo",
+      "https://charts.helm.sh/stable",
+      "--version",
+      "1.41.3",
+    ])
+
+    assertEquals(status.success, true)
+  },
+})
+
+async function addStableRepo() {
+  const tmpRepoName = `tmp-repo-${Math.random().toFixed(10).slice(2)}`
+  const repoAddCmd = await runHelm([
+    "repo",
+    "add",
+    tmpRepoName,
+    "https://charts.helm.sh/stable",
+  ])
+
+  assertEquals(repoAddCmd.status.success, true)
+  return {
+    name: tmpRepoName,
+    async cleanup() {
+      const repoAddCmd = await runHelm(["repo", "remove", tmpRepoName])
+
+      if (!repoAddCmd.status.success) {
+        throw new Error(`Could not remove repo ${tmpRepoName}`)
+      }
+    },
+  }
+}
+
+Deno.test({
+  name:
+    "should successfuly run `helm deno template` with remote chart (with helm repo add)",
+  ignore: !runAllTests,
+  async fn() {
+    const tmpRepo = await addStableRepo()
+
+    try {
+      const templateCmd = await runHelmDeno([
+        "template",
+        "ingress",
+        `${tmpRepo.name}/nginx-ingress`,
+        "--version",
+        "1.41.3",
+      ])
+
+      assertEquals(templateCmd.status.success, true)
+    } finally {
+      await tmpRepo.cleanup()
+    }
   },
 })

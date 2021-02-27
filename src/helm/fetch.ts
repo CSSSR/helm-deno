@@ -4,24 +4,26 @@ import { parseHelmFetchArgs } from "../args/parse-helm-fetch-args.ts"
 import { withErrorMsg } from "../std/mod.ts"
 
 export async function fetchChart(
+  chartBlob: string,
+  tmpDirectory: string,
   chartPath: string,
-  destination: string,
   args: readonly string[]
 ): Promise<void> {
-  const destinationExists = await fs.exists(destination)
+  const destinationExists = await fs.exists(tmpDirectory)
   if (!destinationExists) {
-    return Promise.reject(`Could not find ${destination}`)
+    return Promise.reject(`Could not find ${tmpDirectory}`)
   }
+  const fetchDestination = path.join(tmpDirectory, "fetch-destination")
 
   const helm = Deno.env.get("HELM_BIN") as string
   const cmd = Deno.run({
     cmd: [
       helm,
       "fetch",
-      chartPath,
+      chartBlob,
       "--untar",
       "--untardir",
-      destination,
+      fetchDestination,
       ...parseHelmFetchArgs(args),
     ],
     stdout: "piped",
@@ -40,10 +42,21 @@ export async function fetchChart(
     return Promise.reject(new TextDecoder().decode(error))
   }
 
+  const directories = []
+  for await (const file of fs.expandGlob("*/", {
+    root: fetchDestination,
+  })) {
+    if (file.isDirectory && !file.path.endsWith(".tgz")) {
+      directories.push(file.path)
+    }
+  }
+
+  if (directories.length !== 1) {
+    throw new Error("Found more then one directory")
+  }
+
   await withErrorMsg(
-    fs.copy(path.join(destination, chartPath), destination, {
-      overwrite: true,
-    }),
-    `Could not fetch chart ${chartPath}`
+    fs.copy(directories[0], chartPath),
+    `Could not fetch chart ${chartBlob}`
   )
 }

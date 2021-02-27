@@ -109,36 +109,38 @@ async function main() {
     return
   }
 
-  const workdir = await withErrorMsg(
+  const tmpDir = await withErrorMsg(
     Deno.makeTempDir({ prefix: "chart-" }),
     "Could not create temp directory"
   )
 
-  debug(`Temporary directory ${workdir} has been created`)
+  const tmpChartPath = path.join(tmpDir, "chart")
+
+  debug(`Temporary directory ${tmpDir} has been created`)
   const isLocalChart = await isChartExist(chartLocation)
 
   try {
     // Fetch chart into temporaty directory
     if (isLocalChart) {
       debug(`Copying chart ${chartLocation} to temporary directory`)
-      await copyChart(chartLocation, workdir)
+      await copyChart(chartLocation, tmpChartPath)
       debug(`Successfuly copied chart ${chartLocation} to temporary directory`)
     } else {
       debug(`Fetching chart ${chartLocation} to temporary directory`)
-      await fetchChart(chartLocation, workdir, args)
+      await fetchChart(chartLocation, tmpDir, tmpChartPath, args)
       debug(`Successfuly fetched chart ${chartLocation} to temporary directory`)
     }
 
-    const chartContext = await getChartContext(releaseName, workdir, args)
+    const chartContext = await getChartContext(releaseName, tmpDir, args)
     debug(`Chart context:\n${JSON.stringify(chartContext, null, 2)}`)
 
-    await renderDenoChart(chartContext, workdir, options)
+    await renderDenoChart(chartContext, tmpChartPath, options)
     debug("Deno templates were successfuly rendered")
 
     const helmExecuteArgs = [
       ...command,
       ...[releaseName].filter(Boolean),
-      workdir,
+      tmpChartPath,
       ...helmRestArgs,
     ]
     debug(`Executing: ${helmExecuteArgs.join(" ")}`)
@@ -148,8 +150,8 @@ async function main() {
   } catch (err) {
     const replaceChartPath = (str: string) => {
       return isLocalChart
-        ? str.replaceAll(workdir, chartLocation)
-        : str.replaceAll(`file://${workdir}`, "<chart-root>")
+        ? str.replaceAll(tmpChartPath, chartLocation)
+        : str.replaceAll(`file://${tmpChartPath}`, "<chart-root>")
     }
 
     // Replace paths in error or error stacktrace with readable value
@@ -165,7 +167,7 @@ async function main() {
   } finally {
     if (!options.keepTmpChart) {
       // Remove temporary directory
-      await ignoreNotFoundError(Deno.remove(workdir, { recursive: true }))
+      await ignoreNotFoundError(Deno.remove(tmpDir, { recursive: true }))
     }
   }
 }
