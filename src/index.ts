@@ -131,7 +131,12 @@ async function main() {
       debug(`Successfuly fetched chart ${chartLocation} to temporary directory`)
     }
 
-    const chartContext = await getChartContext(releaseName, tmpDir, args)
+    const chartContext = await getChartContext(
+      releaseName,
+      tmpDir,
+      tmpChartPath,
+      args
+    )
     debug(`Chart context:\n${JSON.stringify(chartContext, null, 2)}`)
 
     await renderDenoChart(chartContext, tmpChartPath, options)

@@ -35,11 +35,17 @@ function normalizeRelease(r: HelmRelease): Release {
 export async function getChartContext(
   release: string,
   tmpDir: string,
+  chartDir: string,
   args: readonly string[]
 ): Promise<ChartContext> {
   const getValuesChartDir = path.join(tmpDir, "get-values-chart")
   try {
-    await fs.ensureDir(path.join(getValuesChartDir, "templates"))
+    await fs.copy(chartDir, getValuesChartDir)
+    const getValuesTemplatesDir = path.join(getValuesChartDir, "templates")
+    await ignoreNotFoundError(
+      Deno.remove(getValuesTemplatesDir, { recursive: true })
+    )
+    await fs.ensureDir(getValuesTemplatesDir)
 
     await Deno.writeFile(
       path.join(getValuesChartDir, "templates/values-and-release.yaml"),
