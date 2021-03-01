@@ -6,6 +6,7 @@ interface ChartContext {
   values: {
     serviceName?: string
     selector: Record<string, string>
+    annotations: Record<string, string>
   }
 }
 
@@ -20,6 +21,7 @@ export default function oneService(c: ChartContext) {
       apiVersion: "v1",
       metadata: {
         name: c.values.serviceName || c.release.name,
+        annotations: c.values.annotations,
       },
       spec: {
         selector: c.values.selector,

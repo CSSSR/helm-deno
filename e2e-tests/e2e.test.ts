@@ -45,6 +45,14 @@ async function runHelmDeno(args: string[]) {
   return await run([helmDenoBin, ...args])
 }
 
+async function assertYamlParsable(yamlFileContent: string) {
+  try {
+    await yaml.parseAll(yamlFileContent)
+  } catch (err) {
+    throw new Error(`Cloud parse yaml context ${err} ${yamlFileContent}`)
+  }
+}
+
 Deno.test({
   name: "should successfuly run `helm deno template` with deno chart",
   async fn() {
@@ -65,6 +73,9 @@ Deno.test({
         kind: "Service",
         metadata: {
           name: "my-release-name",
+          annotations: {
+            "default-annotation": "default-value",
+          },
         },
         spec: {
           ports: [
@@ -117,7 +128,6 @@ Deno.test(
       stdout.replaceAll(helmPluginDir, ""),
       `\
 ==> Linting /e2e-tests/charts/one-service
-[INFO] values.yaml: file does not exist
 [WARNING] templates/: directory not found
 
 1 chart(s) linted, 0 chart(s) failed
@@ -220,6 +230,9 @@ Deno.test({
         kind: "Service",
         metadata: {
           name: "my-release-name",
+          annotations: {
+            "default-annotation": "default-value",
+          },
         },
         spec: {
           ports: [
@@ -584,6 +597,9 @@ Deno.test({
         kind: "Service",
         metadata: {
           name: "my-release-name",
+          annotations: {
+            "default-annotation": "default-value",
+          },
         },
         spec: {
           ports: [
@@ -650,7 +666,7 @@ Deno.test({
     "should successfuly run `helm deno template` with remote deno chart (with --repo option)",
   ignore: !runAllTests,
   async fn() {
-    const { status } = await runHelmDeno([
+    const { status, stdout, stderr } = await runHelmDeno([
       "template",
       "ingress",
       "nginx-ingress",
@@ -660,7 +676,8 @@ Deno.test({
       "1.41.3",
     ])
 
-    assertEquals(status.success, true)
+    await assertYamlParsable(stdout)
+    assertEquals(status.success, true, stderr)
   },
 })
 
@@ -702,7 +719,8 @@ Deno.test({
         "1.41.3",
       ])
 
-      assertEquals(templateCmd.status.success, true)
+      await assertYamlParsable(templateCmd.stdout)
+      assertEquals(templateCmd.status.success, true, templateCmd.stderr)
     } finally {
       await tmpRepo.cleanup()
     }
