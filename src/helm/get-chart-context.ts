@@ -34,19 +34,23 @@ function normalizeRelease(r: HelmRelease): Release {
 
 export async function getChartContext(
   release: string,
-  chartPath: string,
+  tmpDir: string,
   args: readonly string[]
 ): Promise<ChartContext> {
-  const chartContextTemplatePath = path.join(
-    chartPath,
-    "templates/values-and-release.yaml"
-  )
+  const getValuesChartDir = path.join(tmpDir, "get-values-chart")
   try {
-    await fs.ensureDir(path.join(chartPath, "templates"))
+    await fs.ensureDir(path.join(getValuesChartDir, "templates"))
 
     await Deno.writeFile(
-      chartContextTemplatePath,
+      path.join(getValuesChartDir, "templates/values-and-release.yaml"),
       new TextEncoder().encode(valuesAndReleaseData)
+    )
+
+    await Deno.writeFile(
+      path.join(getValuesChartDir, "Chart.yaml"),
+      new TextEncoder().encode(
+        "apiVersion: v2\nname: get-values\nversion: 1.0.0"
+      )
     )
 
     const helm = Deno.env.get("HELM_BIN") as string
@@ -55,7 +59,7 @@ export async function getChartContext(
         helm,
         "template",
         release,
-        chartPath,
+        getValuesChartDir,
         ...parseHelmTemplateArgs(args),
       ],
       stdout: "piped",
@@ -86,6 +90,8 @@ export async function getChartContext(
       values: yaml.parse(x.values),
     }
   } finally {
-    await ignoreNotFoundError(Deno.remove(chartContextTemplatePath))
+    await ignoreNotFoundError(
+      Deno.remove(getValuesChartDir, { recursive: true })
+    )
   }
 }
