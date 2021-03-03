@@ -576,7 +576,7 @@ Deno.test({
 
 Deno.test({
   name:
-    "should not throw error if`--deno-bundle prefer` have been passed and deno-bundle.js do not exist",
+    "should not throw error if `--deno-bundle prefer` have been passed and deno-bundle.js do not exist",
   async fn() {
     const chartPath = path.join(chartsBin, "one-service")
 
