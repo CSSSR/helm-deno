@@ -176,4 +176,13 @@ export async function renderDenoChart(
     path.join(chartPath, `rendered-deno-templates.yaml`),
     templates
   )
+
+  const helmIgnoreContent = ["deno-bundle.js", "deno-templates/"]
+  await Deno.writeTextFile(
+    path.join(chartPath, `.helmignore`),
+    helmIgnoreContent.join("\n"),
+    {
+      append: true,
+    }
+  )
 }
