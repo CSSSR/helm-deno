@@ -1,8 +1,8 @@
 import type { ChartContext } from "../std/mod.ts"
 import type { HelmDenoOptions } from "../args/parse-helm-deno-args.ts"
-import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
-import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
-import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
+import * as yaml from "https://deno.land/std@0.93.0/encoding/yaml.ts"
+import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
+import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
 import { ignoreNotFoundError } from "../utils/ignore-not-found-error.ts"
 
 // deno-lint-ignore no-explicit-any

@@ -1,5 +1,5 @@
-import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
-import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
+import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
+import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
 import { parseHelmFetchArgs } from "../args/parse-helm-fetch-args.ts"
 import { withErrorMsg } from "../std/mod.ts"
 

@@ -1,6 +1,6 @@
 // deno-lint-ignore-file
-import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
-import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
+import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
+import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
 import { parseHelmArgs, supportedCommands } from "./args/parse-helm-args.ts"
 import { parseArgs } from "./args/parse-helm-deno-args.ts"
 import {

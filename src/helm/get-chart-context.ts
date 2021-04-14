@@ -1,7 +1,7 @@
 import type { ChartContext, Release } from "../std/mod.ts"
-import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
-import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
-import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
+import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
+import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
+import * as yaml from "https://deno.land/std@0.93.0/encoding/yaml.ts"
 import { parseHelmTemplateArgs } from "../args/parse-helm-template-args.ts"
 import { ignoreNotFoundError } from "../utils/ignore-not-found-error.ts"
 

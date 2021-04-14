@@ -1,11 +1,11 @@
 import { getAvailablePort } from "https://deno.land/x/port@1.0.0/mod.ts"
-import * as fs from "https://deno.land/std@0.86.0/fs/mod.ts"
-import * as path from "https://deno.land/std@0.86.0/path/mod.ts"
-import * as yaml from "https://deno.land/std@0.86.0/encoding/yaml.ts"
+import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
+import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
+import * as yaml from "https://deno.land/std@0.93.0/encoding/yaml.ts"
 import {
   assertEquals,
   assertStringIncludes,
-} from "https://deno.land/std@0.86.0/testing/asserts.ts"
+} from "https://deno.land/std@0.93.0/testing/asserts.ts"
 import { ignoreNotFoundError } from "../src/utils/ignore-not-found-error.ts"
 
 const runAllTests = Deno.env.get("RUN_ALL_TESTS") === "true"
