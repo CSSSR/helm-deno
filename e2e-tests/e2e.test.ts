@@ -495,6 +495,36 @@ Deno.test({
 })
 
 Deno.test({
+  name: "should clean deno-bundle.js if push wasn't successful",
+  ignore: !runAllTests,
+  async fn() {
+    const chartPath = path.join(chartsBin, "one-service")
+    const denoBundlePath = path.join(chartPath, "deno-bundle.js")
+
+    try {
+      const { status } = await runHelmDeno([
+        "push",
+        chartPath,
+        "http://127.0.0.1:1",
+      ])
+
+      if (status.success) {
+        assertEquals(status.success, false, "should not successfully push")
+      }
+
+      const isDenoBundleExists = await fs.exists(denoBundlePath)
+      assertEquals(
+        isDenoBundleExists,
+        false,
+        "should not have left temporary file deno-bundle.js"
+      )
+    } finally {
+      await removeIfExists(denoBundlePath)
+    }
+  },
+})
+
+Deno.test({
   name: "should use deno-bundle.js if `--deno-bundle require` have been passed",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")

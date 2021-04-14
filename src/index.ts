@@ -94,18 +94,30 @@ async function main() {
   )
 
   if (command.length === 1 && command[0] === "push") {
+    let helmExecuteResult: { exitCode?: number } = {}
     try {
+      console.log("bundleChart")
       await bundleChart(chartLocation, options)
-      await helmExecute(["push", chartLocation, ...helmRestArgs])
+      console.log("helmExecute")
+      helmExecuteResult = await helmExecute([
+        "push",
+        chartLocation,
+        ...helmRestArgs,
+      ])
     } finally {
       await cleanupBundle(chartLocation)
     }
+
+    if (helmExecuteResult.exitCode) {
+      Deno.exit(helmExecuteResult.exitCode)
+    }
+
     return
   }
 
   const lastCommand = command[command.length - 1]
   if (command.length === 0 || !supportedCommands.includes(lastCommand)) {
-    await helmExecute(args)
+    await helmExecute(args, { autoExitOnError: true })
     return
   }
 
@@ -150,7 +162,7 @@ async function main() {
       ...helmRestArgs,
     ]
     debug(`Executing: ${helmExecuteArgs.join(" ")}`)
-    await helmExecute(helmExecuteArgs)
+    await helmExecute(helmExecuteArgs, { autoExitOnError: true })
 
     debug("Success")
   } catch (err) {

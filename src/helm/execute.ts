@@ -1,4 +1,7 @@
-export async function helmExecute(args: readonly string[]): Promise<void> {
+export async function helmExecute(
+  args: readonly string[],
+  { autoExitOnError = false }: { autoExitOnError?: boolean } = {}
+): Promise<{ exitCode?: number }> {
   const helm = Deno.env.get("HELM_BIN") as string
   const cmd = Deno.run({
     cmd: [helm, ...args],
@@ -8,6 +11,11 @@ export async function helmExecute(args: readonly string[]): Promise<void> {
 
   const status = await cmd.status()
   if (!status.success) {
-    Deno.exit(status.code)
+    if (autoExitOnError) {
+      Deno.exit(status.code)
+    }
+    return { exitCode: status.code }
   }
+
+  return {}
 }
