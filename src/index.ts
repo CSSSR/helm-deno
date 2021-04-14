@@ -135,6 +135,7 @@ async function main() {
       releaseName,
       tmpDir,
       tmpChartPath,
+      command,
       args
     )
     debug(`Chart context:\n${JSON.stringify(chartContext, null, 2)}`)

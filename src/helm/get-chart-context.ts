@@ -36,6 +36,7 @@ export async function getChartContext(
   release: string,
   tmpDir: string,
   chartDir: string,
+  commands: readonly string[],
   args: readonly string[]
 ): Promise<ChartContext> {
   const getValuesChartDir = path.join(tmpDir, "get-values-chart")
@@ -63,6 +64,7 @@ export async function getChartContext(
     const cmd = Deno.run({
       cmd: [
         helm,
+        ...(commands.includes("secrets") ? ["secrets"] : []),
         "template",
         release,
         getValuesChartDir,
