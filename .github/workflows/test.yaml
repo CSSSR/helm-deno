@@ -11,13 +11,7 @@ jobs:
 
       - uses: denolib/setup-deno@v2
         with:
-          deno-version: v1.4.x
-
-      - name: Install helm 3
-        run: |
-          wget https://get.helm.sh/helm-v3.4.1-linux-amd64.tar.gz -O helm.tar.gz
-          tar xvf helm.tar.gz linux-amd64/helm
-          echo "$PWD/linux-amd64" >> $GITHUB_PATH
+          deno-version: v1.8.x
 
       - name: Install plugin
         run: make install-plugin

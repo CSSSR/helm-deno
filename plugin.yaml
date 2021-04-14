@@ -5,6 +5,6 @@ description: |-
   This plugin provides Deno for Helm charts
 useTunnel: false
 hooks:
-  install: "$HELM_PLUGIN_DIR/scripts/install.sh v1.4.6"
-  update: "$HELM_PLUGIN_DIR/scripts/install.sh v1.4.6"
+  install: "$HELM_PLUGIN_DIR/scripts/install.sh v1.8.3"
+  update: "$HELM_PLUGIN_DIR/scripts/install.sh v1.8.3"
 command: "$HELM_PLUGIN_DIR/scripts/run.sh"

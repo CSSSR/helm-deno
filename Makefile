@@ -11,7 +11,7 @@ install-tools:
 	@ yarn --frozen-lockfile
 
 install-plugin:
-	@ HELM_PLUGIN_DIR="$$PWD" ./scripts/install.sh v1.4.6
+	@ HELM_PLUGIN_DIR="$$PWD" ./scripts/install.sh v1.8.3
 
 lint:
 	@ yarn prettier --check .
