@@ -19,6 +19,11 @@ jobs:
           tar xvf age.tar.gz age/age age/age-keygen
           echo "$PWD/age" >> $GITHUB_PATH
 
+      - name: Install sops
+        uses: mdgreenwald/mozilla-sops-action@55d09a81cc2b0b5235af697e3b84b1f502f63025 # v1 at 14 April 2020
+        with:
+          version: 3.7.1
+
       - name: Install helm-diff
         run: |
           helm plugin install https://github.com/databus23/helm-diff --version v3.1.3
