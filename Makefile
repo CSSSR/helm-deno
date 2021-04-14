@@ -28,8 +28,11 @@ test:
 # Run all tests
 #
 # Require
-# - helm-secrets
-# - helm-diff
-# - kubernetes cluster with access to read services in default namespace
+# - https://github.com/jkroepke/helm-secrets
+# - https://github.com/mozilla/sops
+# - https://github.com/FiloSottile/age
+# - https://github.com/jkroepke/helm-secrets
+# - Docker
+# - Kubernetes cluster with access to read services in default namespace
 test-all:
 	@ $(shell $(HELM) env) RUN_ALL_TESTS=true deno test --unstable --allow-run --allow-read --allow-write --allow-env --allow-net src/ e2e-tests/

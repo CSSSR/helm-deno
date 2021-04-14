@@ -6,6 +6,7 @@ import {
   assertEquals,
   assertStringIncludes,
 } from "https://deno.land/std@0.86.0/testing/asserts.ts"
+import { ignoreNotFoundError } from "../src/utils/ignore-not-found-error.ts"
 
 const runAllTests = Deno.env.get("RUN_ALL_TESTS") === "true"
 
@@ -17,10 +18,19 @@ function toText(bytes: Uint8Array): string {
   return new TextDecoder().decode(bytes)
 }
 
-async function run(args: string[]) {
+async function removeIfExists(filePath: string) {
+  await ignoreNotFoundError(Deno.remove(filePath, { recursive: true }))
+}
+
+interface RunOptions {
+  env?: { [key: string]: string }
+}
+
+async function run(args: string[], { env = {} }: RunOptions = {}) {
   const cmd = Deno.run({
     cmd: args,
     env: {
+      ...env,
       HELM_PLUGIN_DIR: helmPluginDir,
     },
     stdout: "piped",
@@ -37,12 +47,22 @@ async function run(args: string[]) {
   return { status, stdout: toText(output), stderr: toText(error) }
 }
 
-async function runHelm(args: string[]) {
-  return await run([Deno.env.get("HELM_BIN") as string, ...args])
+async function runShellCmd(shellCmd: string, opts?: RunOptions) {
+  const result = await run(["/bin/sh", "-c", shellCmd], opts)
+
+  if (!result.status.success) {
+    throw new Error(result.stderr)
+  }
+
+  return result
 }
 
-async function runHelmDeno(args: string[]) {
-  return await run([helmDenoBin, ...args])
+async function runHelm(args: string[], opts?: RunOptions) {
+  return await run([Deno.env.get("HELM_BIN") as string, ...args], opts)
+}
+
+async function runHelmDeno(args: string[], opts?: RunOptions) {
+  return await run([helmDenoBin, ...args], opts)
 }
 
 async function assertYamlParsable(yamlFileContent: string) {
@@ -212,43 +232,70 @@ Deno.test({
   name: "should support helm-secrets plugin",
   ignore: !runAllTests,
   async fn() {
-    const chartPath = path.join(chartsBin, "one-service")
+    try {
+      const chartPath = path.join(chartsBin, "one-service")
 
-    const { status, stdout, stderr } = await runHelmDeno([
-      "secrets",
-      "template",
-      "my-release-name",
-      chartPath,
-      "--set",
-      "selector.app=my-app",
-    ])
+      await removeIfExists("age-tmp-test-key.txt")
+      await runShellCmd("age-keygen -o age-tmp-test-key.txt")
+      await runShellCmd(
+        `echo '${JSON.stringify({
+          selector: { app: "my-app" },
+        })}' > tmp-test-values.txt.yaml`
+      )
+      await runShellCmd(
+        "sops --encrypt --age $(cat age-tmp-test-key.txt | grep public | cut -c 15-) tmp-test-values.txt.yaml > tmp-secrets.test-values.yaml"
+      )
 
-    assertEquals(stderr.trim(), "")
-    assertEquals(yaml.parseAll(stdout), [
-      {
-        apiVersion: "v1",
-        kind: "Service",
-        metadata: {
-          name: "my-release-name",
-          annotations: {
-            "default-annotation": "default-value",
+      const { status, stdout, stderr } = await runHelmDeno(
+        [
+          "secrets",
+          "template",
+          "my-release-name",
+          chartPath,
+          "-f",
+          "tmp-secrets.test-values.yaml",
+        ],
+        {
+          env: {
+            SOPS_AGE_KEY_FILE: "age-tmp-test-key.txt",
           },
-        },
-        spec: {
-          ports: [
-            {
-              name: "http",
-              port: 80,
-              targetPort: "http",
+        }
+      )
+
+      assertEquals(
+        stderr,
+        "[helm-secrets] Decrypt: tmp-secrets.test-values.yaml\n\n[helm-secrets] Removed: ./tmp-secrets.test-values.yaml.dec\n"
+      )
+      assertEquals(yaml.parseAll(stdout), [
+        {
+          apiVersion: "v1",
+          kind: "Service",
+          metadata: {
+            name: "my-release-name",
+            annotations: {
+              "default-annotation": "default-value",
             },
-          ],
-          selector: {
-            app: "my-app",
+          },
+          spec: {
+            ports: [
+              {
+                name: "http",
+                port: 80,
+                targetPort: "http",
+              },
+            ],
+            selector: {
+              app: "my-app",
+            },
           },
         },
-      },
-    ])
-    assertEquals(status.success, true)
+      ])
+      assertEquals(status.success, true)
+    } finally {
+      await removeIfExists("age-tmp-test-key.txt")
+      await removeIfExists("tmp-secrets.test-values.yaml")
+      await removeIfExists("tmp-test-values.txt.yaml")
+    }
   },
 })
 
@@ -440,7 +487,7 @@ Deno.test({
         "should have file deno-bundle.js in fetched chart"
       )
     } finally {
-      await Deno.remove(fetchDirectory, { recursive: true })
+      await removeIfExists(fetchDirectory)
       await helmRegistry.stop()
     }
   },
