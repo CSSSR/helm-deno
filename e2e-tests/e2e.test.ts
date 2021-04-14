@@ -389,8 +389,9 @@ async function startHelmRegistry() {
     "--detach",
     `--publish=${port}:8080`,
     "--env=STORAGE=local",
-    "--env=STORAGE_LOCAL_ROOTDIR=/home/chartmuseum/charts",
-    "chartmuseum/chartmuseum:v0.12.0@sha256:38c5ec3b30046d7a02a55b4c8bd8a0cd279538c2e36090973798a858e900b18e",
+    "--env=STORAGE_LOCAL_ROOTDIR=/charts",
+    "--user=0", // To have write permission to /charts
+    "ghcr.io/helm/chartmuseum:v0.13.1@sha256:79350ffbf8b0c205cf8b45988de899db594618b24fefd17cdbcdbbc8eb795d72",
   ])
 
   if (!status.success) {
@@ -604,7 +605,7 @@ Deno.test({
 
 Deno.test({
   name:
-    "should throw error if`--deno-bundle require` have been passed but deno-bundle.js do not exist",
+    "should throw error if `--deno-bundle require` have been passed but deno-bundle.js do not exist",
   async fn() {
     const chartPath = path.join(chartsBin, "one-service")
 
