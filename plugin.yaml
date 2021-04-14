@@ -1,5 +1,5 @@
 name: "deno"
-version: "0.0.2-dev"
+version: "0.1.0-alpha.1"
 usage: "Helm charts with Deno"
 description: |-
   This plugin provides Deno for Helm charts
