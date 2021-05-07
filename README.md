@@ -7,7 +7,7 @@ helm-deno allows write helm charts with JavaScript and TypeScript
 Project currently in its early stage. Breaking changes are to be expected. Please read [changelog](https://github.com/CSSSR/helm-deno/releases) before upgrade.
 
 - [Known bugs](https://github.com/CSSSR/helm-deno/issues?q=is%3Aopen+is%3Aissue+label%3A%22issue+is+bug%22)
-- [Missign features](https://github.com/CSSSR/helm-deno/issues?q=is%3Aopen+is%3Aissue+label%3A%22priority+4+%28must%29%22)
+- [Missing features](https://github.com/CSSSR/helm-deno/issues?q=is%3Aopen+is%3Aissue+label%3A%22priority+4+%28must%29%22)
 - [Expected breaking changes](https://github.com/CSSSR/helm-deno/issues?q=is%3Aopen+is%3Aissue+label%3A%22issue+is+breaking+suggestion%22+label%3A%22priority+4+%28must%29%22)
 
 ## Features
@@ -60,10 +60,10 @@ helm deno template my-release chart-name/
 
 We have written this plugin because we wasn't happy with default helm's templates system: Go templates. There is some of things which wasn't possible with it or was too complex to deal with.
 
-**Working with data structures, not templates.** Programming languages are much more suitable for working with data such as kubernetes objects. And using functions instead of `define` and `template` is so much simpler.
-**Modules.** Deno has a big set of [standard](https://deno.land/std) and [third-party](https://deno.land/x) modules. Publishing your own modules is as easy as pushing file to git repository or serving static files.
-**Type System and static analysis.** Types for your chart values is a good documentaion which is always up-to-date. You are also safe from errors like typos and using variables that do not exist.
-**Ability to work with file system and network.** You can replace kubernetes operators or helm plugins with just a function. For example, decode a sops-encrypted file or fetch secrets from Hashicorp Vault.
+**Working with data structures, not templates.** Programming languages are much more suitable for working with data such as kubernetes objects. And using functions instead of `define` and `template` is so much simpler.  
+**Modules.** Deno has a big set of [standard](https://deno.land/std) and [third-party](https://deno.land/x) modules. Publishing your own modules is as easy as pushing file to git repository or serving static files.  
+**Type System and static analysis.** Types for your chart values is a good documentaion which is always up-to-date. You are also safe from errors like typos and using variables that do not exist.  
+**Ability to work with file system and network.** You can replace kubernetes operators or helm plugins with just a function. For example, decode a sops-encrypted file or fetch secrets from Hashicorp Vault.  
 
 ## Current limitations
 
