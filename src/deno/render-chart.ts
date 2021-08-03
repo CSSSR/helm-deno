@@ -148,7 +148,10 @@ export async function renderDenoChart(
       importer,
       JSON.stringify({
         chartPath: denoTemplateFilePath,
-        chartContext: chartContext,
+        chartContext: {
+          ...chartContext,
+          chartRoot: chartPath,
+        },
       }),
     ],
     stdout: "piped",
