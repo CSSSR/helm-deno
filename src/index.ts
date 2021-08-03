@@ -96,9 +96,7 @@ async function main() {
   if (command.length === 1 && command[0] === "push") {
     let helmExecuteResult: { exitCode?: number } = {}
     try {
-      console.log("bundleChart")
       await bundleChart(chartLocation, options)
-      console.log("helmExecute")
       helmExecuteResult = await helmExecute([
         "push",
         chartLocation,
