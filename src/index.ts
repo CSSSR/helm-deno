@@ -165,6 +165,10 @@ async function main() {
     debug("Success")
   } catch (err) {
     const replaceChartPath = (str: string) => {
+      if (options.keepTmpChart) {
+        return str
+      }
+
       return isLocalChart
         ? str.replaceAll(tmpChartPath, chartLocation)
         : str.replaceAll(`file://${tmpChartPath}`, "<chart-root>")
