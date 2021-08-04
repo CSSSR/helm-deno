@@ -91,7 +91,7 @@ export async function bundleChart(
     stderr: "piped",
   })
 
-  const [status, , error] = await Promise.all([
+  const [status, output, error] = await Promise.all([
     cmd.status(),
     cmd.output(),
     cmd.stderrOutput(),
@@ -99,6 +99,7 @@ export async function bundleChart(
   cmd.close()
 
   if (!status.success) {
+    console.log(new TextDecoder().decode(output))
     throw new Error(new TextDecoder().decode(error))
   }
 }
@@ -166,6 +167,7 @@ export async function renderDenoChart(
   cmd.close()
 
   if (!status.success) {
+    console.log(new TextDecoder().decode(output))
     return Promise.reject(new TextDecoder().decode(error))
   }
 
