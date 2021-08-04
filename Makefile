@@ -23,7 +23,7 @@ fmt:
 
 # Run fast and independant tests
 test:
-	@ $(shell $(HELM) env) deno test --unstable --allow-run --allow-read --allow-write --allow-env --allow-net src/ e2e-tests/
+	@ $(shell $(HELM) env) bin/deno test --unstable --allow-run --allow-read --allow-write --allow-env --allow-net src/ e2e-tests/
 
 # Run all tests
 #
@@ -35,7 +35,7 @@ test:
 # - Docker
 # - Kubernetes cluster with access to read services in default namespace
 test-all:
-	@ $(shell $(HELM) env) RUN_ALL_TESTS=true deno test --unstable --allow-run --allow-read --allow-write --allow-env --allow-net src/ e2e-tests/
+	@ $(shell $(HELM) env) RUN_ALL_TESTS=true bin/deno test --unstable --allow-run --allow-read --allow-write --allow-env --allow-net src/ e2e-tests/
 
 update-deps:
 	@ # Install udd: https://github.com/hayd/deno-udd

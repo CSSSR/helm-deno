@@ -131,7 +131,7 @@ Deno.test(
       stderr,
       path.join(chartPath, "deno-templates/index.ts")
     )
-    assertEquals(stdout, "")
+    assertEquals(stdout.trim(), "")
     assertEquals(status.success, false)
   }
 )
