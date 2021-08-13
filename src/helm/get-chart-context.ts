@@ -4,6 +4,7 @@ import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
 import * as yaml from "https://deno.land/std@0.93.0/encoding/yaml.ts"
 import { parseHelmTemplateArgs } from "../args/parse-helm-template-args.ts"
 import { ignoreNotFoundError } from "../utils/ignore-not-found-error.ts"
+import { waitForProcess } from "../utils/process.ts"
 
 const valuesAndReleaseData = `
 kind: ChartContext
@@ -74,19 +75,9 @@ export async function getChartContext(
       stderr: "piped",
     })
 
-    const [output, error, status] = await Promise.all([
-      cmd.output(),
-      cmd.stderrOutput(),
-      cmd.status(),
-    ])
-    cmd.close()
-
-    const manifests = new TextDecoder().decode(output)
-    const errorStr = new TextDecoder().decode(error)
-
-    if (!status.success) {
-      return Promise.reject(errorStr)
-    }
+    const { stdout: manifests } = await waitForProcess(cmd, {
+      autoReject: true,
+    })
 
     // deno-lint-ignore no-explicit-any
     const data = yaml.parseAll(manifests) as any[]

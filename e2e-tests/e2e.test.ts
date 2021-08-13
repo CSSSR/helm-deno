@@ -7,16 +7,13 @@ import {
   assertStringIncludes,
 } from "https://deno.land/std@0.93.0/testing/asserts.ts"
 import { ignoreNotFoundError } from "../src/utils/ignore-not-found-error.ts"
+import { waitForProcess } from "../src/utils/process.ts"
 
 const runAllTests = Deno.env.get("RUN_ALL_TESTS") === "true"
 
 const helmPluginDir = path.join(import.meta.url.replace("file://", ""), "../..")
 const helmDenoBin = path.join(helmPluginDir, "scripts/dev.sh")
 const chartsBin = path.join(helmPluginDir, "e2e-tests/charts")
-
-function toText(bytes: Uint8Array): string {
-  return new TextDecoder().decode(bytes)
-}
 
 async function removeIfExists(filePath: string) {
   await ignoreNotFoundError(Deno.remove(filePath, { recursive: true }))
@@ -37,14 +34,7 @@ async function run(args: string[], { env = {} }: RunOptions = {}) {
     stderr: "piped",
   })
 
-  const [status, output, error] = await Promise.all([
-    cmd.status(),
-    cmd.output(),
-    cmd.stderrOutput(),
-  ])
-  cmd.close()
-
-  return { status, stdout: toText(output), stderr: toText(error) }
+  return await waitForProcess(cmd)
 }
 
 async function runShellCmd(shellCmd: string, opts?: RunOptions) {

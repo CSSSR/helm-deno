@@ -2,6 +2,7 @@ import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
 import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
 import { parseHelmFetchArgs } from "../args/parse-helm-fetch-args.ts"
 import { withErrorMsg } from "../std/mod.ts"
+import { waitForProcess } from "../utils/process.ts"
 
 export async function fetchChart(
   chartBlob: string,
@@ -30,17 +31,7 @@ export async function fetchChart(
     stderr: "piped",
   })
 
-  const [status, output, error] = await Promise.all([
-    cmd.status(),
-    cmd.output(),
-    cmd.stderrOutput(),
-  ])
-  cmd.close()
-
-  if (!status.success) {
-    console.log(new TextDecoder().decode(output))
-    return Promise.reject(new TextDecoder().decode(error))
-  }
+  await waitForProcess(cmd, { autoReject: true })
 
   const directories = []
   for await (const file of fs.expandGlob("*/", {

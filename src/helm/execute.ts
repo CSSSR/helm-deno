@@ -11,6 +11,10 @@ export async function helmExecute(
 
   const status = await cmd.status()
   if (!status.success) {
+    if (status.signal === Deno.Signal.SIGTERM) {
+      console.error("Child process terminated via SIGTERM")
+    }
+
     if (autoExitOnError) {
       Deno.exit(status.code)
     }

@@ -4,6 +4,7 @@ import * as yaml from "https://deno.land/std@0.93.0/encoding/yaml.ts"
 import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
 import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
 import { ignoreNotFoundError } from "../utils/ignore-not-found-error.ts"
+import { waitForProcess } from "../utils/process.ts"
 
 // deno-lint-ignore no-explicit-any
 function stringifyResource(manifest: any): string {
@@ -91,17 +92,7 @@ export async function bundleChart(
     stderr: "piped",
   })
 
-  const [status, output, error] = await Promise.all([
-    cmd.status(),
-    cmd.output(),
-    cmd.stderrOutput(),
-  ])
-  cmd.close()
-
-  if (!status.success) {
-    console.log(new TextDecoder().decode(output))
-    throw new Error(new TextDecoder().decode(error))
-  }
+  await waitForProcess(cmd, { autoReject: true })
 }
 
 export async function cleanupBundle(chartPath: string): Promise<void> {
@@ -138,6 +129,7 @@ export async function renderDenoChart(
     cmd: [
       deno,
       "run",
+      "--v8-flags=--max-old-space-size=256",
       "--unstable",
       "--allow-net",
       "--allow-read",
@@ -159,19 +151,8 @@ export async function renderDenoChart(
     stderr: "piped",
   })
 
-  const [status, output, error] = await Promise.all([
-    cmd.status(),
-    cmd.output(),
-    cmd.stderrOutput(),
-  ])
-  cmd.close()
-
-  if (!status.success) {
-    console.log(new TextDecoder().decode(output))
-    return Promise.reject(new TextDecoder().decode(error))
-  }
-
-  const denoResources = JSON.parse(new TextDecoder().decode(output))
+  const { stdout } = await waitForProcess(cmd, { autoReject: true })
+  const denoResources = JSON.parse(stdout)
   const templates = denoResources.map(stringifyResource).join("\n---\n")
   await Deno.writeTextFile(
     path.join(templateFolderPath, `import-rendered-templates.yaml`),
