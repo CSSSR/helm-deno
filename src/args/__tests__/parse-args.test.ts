@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.93.0/testing/asserts.ts"
+import { assertEquals } from "https://deno.land/std@0.107.0/testing/asserts.ts"
 import { parseArgs } from "../parse-helm-deno-args.ts"
 
 Deno.test("Should parse --deno-* flags", () => {

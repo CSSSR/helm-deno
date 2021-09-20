@@ -1,11 +1,13 @@
-import { getAvailablePort } from "https://deno.land/x/port@1.0.0/mod.ts"
-import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
-import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
-import * as yaml from "https://deno.land/std@0.93.0/encoding/yaml.ts"
+// Use fork until https://github.com/piyush-bhatt/deno-port/pull/1 is merged
+import { getAvailablePort } from "https://raw.githubusercontent.com/Nitive/deno-port/fix-getting-random-port/mod.ts"
+
+import { exists } from "https://deno.land/std@0.107.0/fs/exists.ts"
+import * as path from "https://deno.land/std@0.107.0/path/mod.ts"
+import * as yaml from "https://deno.land/std@0.107.0/encoding/yaml.ts"
 import {
   assertEquals,
   assertStringIncludes,
-} from "https://deno.land/std@0.93.0/testing/asserts.ts"
+} from "https://deno.land/std@0.107.0/testing/asserts.ts"
 import { ignoreNotFoundError } from "../src/utils/ignore-not-found-error.ts"
 import { waitForProcess } from "../src/utils/process.ts"
 
@@ -445,7 +447,7 @@ Deno.test({
       }
       assertEquals(status.success, true, "should successfully push")
 
-      const isDenoBundleExists = await fs.exists(
+      const isDenoBundleExists = await exists(
         path.join(chartPath, "deno-bundle.js")
       )
       assertEquals(
@@ -469,7 +471,7 @@ Deno.test({
         "should successfully fetch"
       )
 
-      const isDenoBundleInFetchedChartExists = await fs.exists(
+      const isDenoBundleInFetchedChartExists = await exists(
         path.join(fetchDirectory, "one-service/deno-bundle.js")
       )
       assertEquals(
@@ -502,7 +504,7 @@ Deno.test({
         assertEquals(status.success, false, "should not successfully push")
       }
 
-      const isDenoBundleExists = await fs.exists(denoBundlePath)
+      const isDenoBundleExists = await exists(denoBundlePath)
       assertEquals(
         isDenoBundleExists,
         false,

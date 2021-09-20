@@ -1,5 +1,7 @@
-import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
-import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
+import { exists } from "https://deno.land/std@0.107.0/fs/exists.ts"
+import { copy } from "https://deno.land/std@0.107.0/fs/copy.ts"
+import { expandGlob } from "https://deno.land/std@0.107.0/fs/expand_glob.ts"
+import * as path from "https://deno.land/std@0.107.0/path/mod.ts"
 import { parseHelmFetchArgs } from "../args/parse-helm-fetch-args.ts"
 import { withErrorMsg } from "../std/mod.ts"
 import { waitForProcess } from "../utils/process.ts"
@@ -10,7 +12,7 @@ export async function fetchChart(
   chartPath: string,
   args: readonly string[]
 ): Promise<void> {
-  const destinationExists = await fs.exists(tmpDirectory)
+  const destinationExists = await exists(tmpDirectory)
   if (!destinationExists) {
     return Promise.reject(`Could not find ${tmpDirectory}`)
   }
@@ -34,7 +36,7 @@ export async function fetchChart(
   await waitForProcess(cmd, { autoReject: true })
 
   const directories = []
-  for await (const file of fs.expandGlob("*/", {
+  for await (const file of expandGlob("*/", {
     root: fetchDestination,
   })) {
     if (file.isDirectory && !file.path.endsWith(".tgz")) {
@@ -47,7 +49,7 @@ export async function fetchChart(
   }
 
   await withErrorMsg(
-    fs.copy(directories[0], chartPath),
+    copy(directories[0], chartPath),
     `Could not fetch chart ${chartBlob}`
   )
 }

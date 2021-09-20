@@ -1,5 +1,9 @@
 import { toText } from "./text.ts"
 
+export function isSigterm(signal: number | undefined) {
+  return signal === 15
+}
+
 export async function waitForProcess(
   ps: Deno.Process,
   opts: { autoReject?: boolean } = {}
@@ -13,7 +17,7 @@ export async function waitForProcess(
 
   const stdout = toText(output)
   let stderr = toText(error)
-  if (status.signal === Deno.Signal.SIGTERM) {
+  if (isSigterm(status.signal)) {
     stderr = `Child process terminated via SIGTERM\n${stderr}`
   }
 

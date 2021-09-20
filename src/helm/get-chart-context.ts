@@ -1,7 +1,8 @@
 import type { ChartContext, Release } from "../std/mod.ts"
-import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
-import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
-import * as yaml from "https://deno.land/std@0.93.0/encoding/yaml.ts"
+import { copy } from "https://deno.land/std@0.107.0/fs/copy.ts"
+import { ensureDir } from "https://deno.land/std@0.107.0/fs/ensure_dir.ts"
+import * as path from "https://deno.land/std@0.107.0/path/mod.ts"
+import * as yaml from "https://deno.land/std@0.107.0/encoding/yaml.ts"
 import { parseHelmTemplateArgs } from "../args/parse-helm-template-args.ts"
 import { ignoreNotFoundError } from "../utils/ignore-not-found-error.ts"
 import { waitForProcess } from "../utils/process.ts"
@@ -42,12 +43,12 @@ export async function getChartContext(
 ): Promise<ChartContext> {
   const getValuesChartDir = path.join(tmpDir, "get-values-chart")
   try {
-    await fs.copy(chartDir, getValuesChartDir)
+    await copy(chartDir, getValuesChartDir)
     const getValuesTemplatesDir = path.join(getValuesChartDir, "templates")
     await ignoreNotFoundError(
       Deno.remove(getValuesTemplatesDir, { recursive: true })
     )
-    await fs.ensureDir(getValuesTemplatesDir)
+    await ensureDir(getValuesTemplatesDir)
 
     await Deno.writeFile(
       path.join(getValuesChartDir, "templates/values-and-release.yaml"),

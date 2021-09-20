@@ -1,10 +1,9 @@
 name: "deno"
-version: "0.1.0-alpha.4"
+version: "0.2.0-alpha.1"
 usage: "Helm charts with Deno"
 description: |-
-  This plugin provides Deno for Helm charts
-useTunnel: false
+  This plugin allows to use Deno to prepare kubernetes manifests
 hooks:
-  install: "$HELM_PLUGIN_DIR/scripts/install.sh v1.8.3"
-  update: "$HELM_PLUGIN_DIR/scripts/install.sh v1.8.3"
+  install: "$HELM_PLUGIN_DIR/scripts/install.sh v1.14.0"
+  update: "$HELM_PLUGIN_DIR/scripts/install.sh v1.14.0"
 command: "$HELM_PLUGIN_DIR/scripts/run.sh"

@@ -1,6 +1,7 @@
 // deno-lint-ignore-file
-import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
-import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
+import { exists } from "https://deno.land/std@0.107.0/fs/exists.ts"
+import { copy } from "https://deno.land/std@0.107.0/fs/copy.ts"
+import * as path from "https://deno.land/std@0.107.0/path/mod.ts"
 import { parseHelmArgs, supportedCommands } from "./args/parse-helm-args.ts"
 import { parseArgs } from "./args/parse-helm-deno-args.ts"
 import {
@@ -43,19 +44,19 @@ Typical usage:
 }
 
 async function copyChart(chartPath: string, destination: string) {
-  const destinationExists = await fs.exists(chartPath)
+  const destinationExists = await exists(chartPath)
   if (!destinationExists) {
     return Promise.reject(`Could not find ${chartPath}`)
   }
   await withErrorMsg(
-    fs.copy(chartPath, destination, { overwrite: true }),
+    copy(chartPath, destination, { overwrite: true }),
     "Could not copy chart directory"
   )
 }
 
 async function isChartExist(chartPath: string) {
   const chartYamlPath = path.join(chartPath, "Chart.yaml")
-  return await fs.exists(chartYamlPath)
+  return await exists(chartYamlPath)
 }
 
 async function main() {

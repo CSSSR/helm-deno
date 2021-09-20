@@ -1,8 +1,9 @@
 import type { ChartContext } from "../std/mod.ts"
 import type { HelmDenoOptions } from "../args/parse-helm-deno-args.ts"
-import * as yaml from "https://deno.land/std@0.93.0/encoding/yaml.ts"
-import * as fs from "https://deno.land/std@0.93.0/fs/mod.ts"
-import * as path from "https://deno.land/std@0.93.0/path/mod.ts"
+import * as yaml from "https://deno.land/std@0.107.0/encoding/yaml.ts"
+import { exists } from "https://deno.land/std@0.107.0/fs/exists.ts"
+import { ensureDir } from "https://deno.land/std@0.107.0/fs/ensure_dir.ts"
+import * as path from "https://deno.land/std@0.107.0/path/mod.ts"
 import { ignoreNotFoundError } from "../utils/ignore-not-found-error.ts"
 import { waitForProcess } from "../utils/process.ts"
 
@@ -21,7 +22,7 @@ async function getImportMapFlags(denoOptions: HelmDenoOptions) {
     return []
   }
 
-  const hasImportMap = await fs.exists(denoOptions.importMap)
+  const hasImportMap = await exists(denoOptions.importMap)
 
   if (!hasImportMap) {
     throw new Error(`Could not find import map ${denoOptions.importMap}`)
@@ -44,7 +45,7 @@ async function getDenoTemplateFilePath(
     return indexFilePath
   }
 
-  const bundleExists = await fs.exists(bundlePath)
+  const bundleExists = await exists(bundlePath)
 
   if (denoOptions.bundlePolicy === "require") {
     if (!bundleExists) {
@@ -112,10 +113,10 @@ export async function renderDenoChart(
     bundlePath,
     indexFilePath,
   } = getPaths(chartPath)
-  await fs.ensureDir(templateFolderPath)
+  await ensureDir(templateFolderPath)
 
   const isDenoChart =
-    (await fs.exists(bundlePath)) || (await fs.exists(indexFilePath))
+    (await exists(bundlePath)) || (await exists(indexFilePath))
   if (!isDenoChart) {
     return
   }

@@ -1,3 +1,5 @@
+import { isSigterm } from "../utils/process.ts"
+
 export async function helmExecute(
   args: readonly string[],
   { autoExitOnError = false }: { autoExitOnError?: boolean } = {}
@@ -11,7 +13,7 @@ export async function helmExecute(
 
   const status = await cmd.status()
   if (!status.success) {
-    if (status.signal === Deno.Signal.SIGTERM) {
+    if (isSigterm(status.signal)) {
       console.error("Child process terminated via SIGTERM")
     }
 

@@ -3,7 +3,7 @@
 HELM=$(shell which helm3 || which helm)
 
 build:
-	bin/deno bundle --unstable src/index.ts bin/bundle.js
+	bin/deno --unstable bundle src/index.ts bin/bundle.js
 
 install: install-tools install-plugin
 
@@ -11,7 +11,7 @@ install-tools:
 	@ yarn --frozen-lockfile
 
 install-plugin:
-	@ HELM_PLUGIN_DIR="$$PWD" ./scripts/install.sh v1.8.3
+	@ HELM_PLUGIN_DIR="$$PWD" ./scripts/install.sh v1.14.0
 
 lint:
 	@ yarn prettier --check .
@@ -38,5 +38,4 @@ test-all:
 	@ $(shell $(HELM) env) RUN_ALL_TESTS=true bin/deno test --unstable --allow-run --allow-read --allow-write --allow-env --allow-net src/ e2e-tests/
 
 update-deps:
-	@ # Install udd: https://github.com/hayd/deno-udd
-	udd src/**/*.ts
+	deno run -A https://deno.land/x/udd@0.5.0/main.ts src/**/*.ts
