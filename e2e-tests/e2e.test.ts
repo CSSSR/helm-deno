@@ -256,7 +256,7 @@ Deno.test({
 
       assertEquals(
         stderr,
-        "[helm-secrets] Decrypt: tmp-secrets.test-values.yaml\n\n[helm-secrets] Removed: ./tmp-secrets.test-values.yaml.dec\n"
+        "[helm-secrets] Decrypt: tmp-secrets.test-values.yaml\n\n[helm-secrets] Removed: tmp-secrets.test-values.yaml.dec\n"
       )
       assertEquals(yaml.parseAll(stdout), [
         {
