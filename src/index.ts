@@ -169,7 +169,15 @@ async function main() {
     )
     debug(`Chart context:\n${JSON.stringify(chartContext, null, 2)}`)
 
-    await renderDenoChart(chartContext, tmpChartPath, options)
+    const renderResult = await renderDenoChart(
+      chartContext,
+      tmpChartPath,
+      options
+    )
+    if (renderResult?.debug) {
+      debug(`Deno templates debug message:\n${renderResult?.debug}`)
+    }
+
     debug("Deno templates were successfuly rendered")
 
     const helmExecuteArgs = [

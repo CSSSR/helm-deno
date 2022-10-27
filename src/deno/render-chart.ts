@@ -105,14 +105,9 @@ export async function renderDenoChart(
   chartContext: ChartContext,
   chartPath: string,
   denoOptions: HelmDenoOptions
-): Promise<void> {
-  const {
-    deno,
-    importer,
-    templateFolderPath,
-    bundlePath,
-    indexFilePath,
-  } = getPaths(chartPath)
+): Promise<{ debug: string } | undefined> {
+  const { deno, importer, templateFolderPath, bundlePath, indexFilePath } =
+    getPaths(chartPath)
   await ensureDir(templateFolderPath)
 
   const isDenoChart =
@@ -152,7 +147,7 @@ export async function renderDenoChart(
     stderr: "piped",
   })
 
-  const { stdout } = await waitForProcess(cmd, { autoReject: true })
+  const { stdout, stderr } = await waitForProcess(cmd, { autoReject: true })
   const denoResources = JSON.parse(stdout)
   const templates = denoResources.map(stringifyResource).join("\n---\n")
   await Deno.writeTextFile(
@@ -172,4 +167,8 @@ export async function renderDenoChart(
       append: true,
     }
   )
+
+  if (denoOptions.logLevel === "debug") {
+    return { debug: stderr }
+  }
 }
