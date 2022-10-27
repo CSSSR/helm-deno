@@ -7,34 +7,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: denolib/setup-deno@v2
+      - uses: denoland/setup-deno@v1
         with:
-          deno-version: v1.8.x
+          deno-version: v1.26.x
 
       - name: Install Age Encryption Tool
         run: |
-          wget https://github.com/FiloSottile/age/releases/download/v1.0.0-rc.1/age-v1.0.0-rc.1-linux-amd64.tar.gz -O age.tar.gz
+          wget https://github.com/FiloSottile/age/releases/download/v1.0.0/age-v1.0.0-linux-amd64.tar.gz -O age.tar.gz
           tar xvf age.tar.gz age/age age/age-keygen
           echo "$PWD/age" >> $GITHUB_PATH
 
       - name: Install sops
-        uses: mdgreenwald/mozilla-sops-action@55d09a81cc2b0b5235af697e3b84b1f502f63025 # v1 at 14 April 2020
+        uses: mdgreenwald/mozilla-sops-action@v1.2.0
         with:
-          version: 3.7.1
+          version: 3.7.3
 
       - name: Install helm-diff
         run: |
-          helm plugin install https://github.com/databus23/helm-diff --version v3.1.3
+          helm plugin install https://github.com/databus23/helm-diff --version v3.6.0
 
       - name: Install helm-secrets
         run: |
-          helm plugin install https://github.com/jkroepke/helm-secrets --version v3.6.1
+          helm plugin install https://github.com/jkroepke/helm-secrets --version v4.1.1
 
       - name: Install helm-push
         run: |
-          helm plugin install https://github.com/chartmuseum/helm-push --version v0.9.0
+          helm plugin install https://github.com/chartmuseum/helm-push --version v0.10.3
 
       - name: Install plugin
         run: make install-plugin

@@ -16,7 +16,7 @@ export interface HelmDenoOptions {
 }
 
 const parser = args
-  .describe("Add or subtract two numbers")
+  .describe("")
   .with(
     PartialOption("deno-log-level", {
       type: Choice<LogLevel>(
