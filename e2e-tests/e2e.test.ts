@@ -162,9 +162,10 @@ Supported helm [command] is:
   - template
   - install
   - upgrade
+  - push
   - diff (helm plugin)
   - secrets (helm plugin)
-  - push (helm plugin)
+  - cm-push (helm plugin)
 
 You must use the options of the supported commands in strict order:
   $ helm <secrets> <diff> [upgrade/template/install] [RELEASE] [CHART] <flags>
@@ -423,8 +424,57 @@ async function startHelmRegistry() {
   }
 }
 
+async function startOCIRegistry() {
+  const port = await getAvailablePort()
+  const { status, stdout, stderr } = await run([
+    "docker",
+    "run",
+    "--rm",
+    "--detach",
+    `--publish=${port}:5000`,
+    "registry:2.8.1@sha256:11bb1b1a54493dc3626f4bd3cdd74f83e4e5157239ea607a70cbe634f50bb89c",
+  ])
+
+  if (!status.success) {
+    throw new Error(`Could not start oci registry ${stderr}`)
+  }
+  const containerID = stdout.trim()
+
+  let errorsCount = 0
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    if (errorsCount > 10) {
+      throw new Error("Too many errors")
+    }
+    try {
+      const response = await fetch(`http://localhost:${port}/v2/`)
+      await response.text()
+      if (response.ok) {
+        break
+      }
+    } catch {
+      errorsCount++
+    }
+    await sleep(200)
+  }
+
+  return {
+    url: `oci://localhost:${port}`,
+    async stop() {
+      const { status, stderr } = await run(["docker", "stop", containerID])
+
+      if (!status.success) {
+        const dockerStopError = stderr
+        throw new Error(
+          `Could not stop oci registry docker container ${containerID} ${dockerStopError}`
+        )
+      }
+    },
+  }
+}
+
 Deno.test({
-  name: "should precompile chart during helm deno push",
+  name: "should precompile chart during helm deno cm-push",
   ignore: !runAllTests,
   async fn() {
     const helmRegistry = await startHelmRegistry()
@@ -436,7 +486,7 @@ Deno.test({
       const chartPath = path.join(chartsBin, "one-service")
 
       const { status, stderr } = await runHelmDeno([
-        "push",
+        "cm-push",
         chartPath,
         helmRegistry.url,
       ])
@@ -486,7 +536,106 @@ Deno.test({
 })
 
 Deno.test({
-  name: "should clean deno-bundle.js if push wasn't successful",
+  name: "should precompile chart during helm deno push",
+  ignore: !runAllTests,
+  async fn() {
+    const ociRegistry = await startOCIRegistry()
+    const fetchDirectory = await Deno.makeTempDir({
+      prefix: "helm-deno-tests-",
+    })
+
+    try {
+      const chartPath = path.join(chartsBin, "one-service")
+
+      const { status, stderr } = await runHelmDeno([
+        "push",
+        chartPath,
+        ociRegistry.url,
+      ])
+
+      if (!status.success) {
+        console.log(stderr)
+      }
+      assertEquals(status.success, true, "should successfully push")
+
+      const isDenoBundleExists = await exists(
+        path.join(chartPath, "deno-bundle.js")
+      )
+      assertEquals(
+        isDenoBundleExists,
+        false,
+        "should not have left temporary file deno-bundle.js"
+      )
+
+      const isHelmPackageExists = await exists(
+        path.join(chartPath, "one-service-1.0.0.tgz")
+      )
+      assertEquals(
+        isHelmPackageExists,
+        false,
+        "should not have left temporary file one-service-1.0.0.tgz"
+      )
+
+      const fetchResult = await runHelmDeno([
+        "fetch",
+        `${ociRegistry.url}/one-service`,
+        "--untar",
+        "--untardir",
+        fetchDirectory,
+      ])
+      assertEquals(
+        fetchResult.status.success,
+        true,
+        "should successfully fetch"
+      )
+
+      const isDenoBundleInFetchedChartExists = await exists(
+        path.join(fetchDirectory, "one-service/deno-bundle.js")
+      )
+      assertEquals(
+        isDenoBundleInFetchedChartExists,
+        true,
+        "should have file deno-bundle.js in fetched chart"
+      )
+    } finally {
+      await removeIfExists(fetchDirectory)
+      await ociRegistry.stop()
+    }
+  },
+})
+
+Deno.test({
+  name: "should clean deno-bundle.js if cm-push wasn't successful",
+  ignore: !runAllTests,
+  async fn() {
+    const chartPath = path.join(chartsBin, "one-service")
+    const denoBundlePath = path.join(chartPath, "deno-bundle.js")
+
+    try {
+      const { status } = await runHelmDeno([
+        "cm-push",
+        chartPath,
+        "http://127.0.0.1:1",
+      ])
+
+      if (status.success) {
+        assertEquals(status.success, false, "should not successfully push")
+      }
+
+      const isDenoBundleExists = await exists(denoBundlePath)
+      assertEquals(
+        isDenoBundleExists,
+        false,
+        "should not have left temporary file deno-bundle.js"
+      )
+    } finally {
+      await removeIfExists(denoBundlePath)
+    }
+  },
+})
+
+Deno.test({
+  name: "should clean deno-bundle.js and helm package if push wasn't successful",
   ignore: !runAllTests,
   async fn() {
     const chartPath = path.join(chartsBin, "one-service")
@@ -508,6 +657,15 @@ Deno.test({
         isDenoBundleExists,
         false,
         "should not have left temporary file deno-bundle.js"
+      )
+
+      const isHelmPackageExists = await exists(
+        path.join(chartPath, "one-service-1.0.0.tgz")
+      )
+      assertEquals(
+        isHelmPackageExists,
+        false,
+        "should not have left temporary file one-service-1.0.0.tgz"
       )
     } finally {
       await removeIfExists(denoBundlePath)
@@ -543,8 +701,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should use deno-bundle.js if `--deno-bundle prefer` have been passed and deno-bundle.js exists",
+  name: "should use deno-bundle.js if `--deno-bundle prefer` have been passed and deno-bundle.js exists",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")
 
@@ -571,8 +728,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should use deno-templates/index.ts if `--deno-bundle ignore` have been passed",
+  name: "should use deno-templates/index.ts if `--deno-bundle ignore` have been passed",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")
 
@@ -599,8 +755,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should use deno-templates/index.ts if --deno-bundle have not been passed",
+  name: "should use deno-templates/index.ts if --deno-bundle have not been passed",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")
 
@@ -625,8 +780,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should throw error if `--deno-bundle require` have been passed but deno-bundle.js do not exist",
+  name: "should throw error if `--deno-bundle require` have been passed but deno-bundle.js do not exist",
   async fn() {
     const chartPath = path.join(chartsBin, "one-service")
 
@@ -644,8 +798,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should not throw error if `--deno-bundle prefer` have been passed and deno-bundle.js do not exist",
+  name: "should not throw error if `--deno-bundle prefer` have been passed and deno-bundle.js do not exist",
   async fn() {
     const chartPath = path.join(chartsBin, "one-service")
 
@@ -731,8 +884,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should successfuly run `helm deno template` with remote deno chart (with --repo option)",
+  name: "should successfuly run `helm deno template` with remote deno chart (with --repo option)",
   ignore: !runAllTests,
   async fn() {
     const { status, stdout, stderr } = await runHelmDeno([
@@ -773,8 +925,7 @@ async function addStableRepo() {
 }
 
 Deno.test({
-  name:
-    "should successfuly run `helm deno template` with remote chart (with helm repo add)",
+  name: "should successfuly run `helm deno template` with remote chart (with helm repo add)",
   ignore: !runAllTests,
   async fn() {
     const tmpRepo = await addStableRepo()

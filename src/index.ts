@@ -7,6 +7,12 @@ import {
   cleanupBundle,
   renderDenoChart,
 } from "./deno/render-chart.ts"
+import {
+  copyChart,
+  isChartExist,
+  getChartPackagePath,
+  cleanupChartPackage,
+} from "./helm/chart-utils.ts"
 import { helmExecute } from "./helm/execute.ts"
 import { fetchChart } from "./helm/fetch.ts"
 import { getChartContext } from "./helm/get-chart-context.ts"
@@ -22,9 +28,10 @@ Supported helm [command] is:
   - template
   - install
   - upgrade
+  - push
   - diff (helm plugin)
   - secrets (helm plugin)
-  - push (helm plugin)
+  - cm-push (helm plugin)
 
 You must use the options of the supported commands in strict order:
   $ helm <secrets> <diff> [${supportedCommands.join(
@@ -39,22 +46,6 @@ Typical usage:
 
   console.log(pluginUsage)
   Deno.exit(0)
-}
-
-async function copyChart(chartPath: string, destination: string) {
-  const destinationExists = await exists(chartPath)
-  if (!destinationExists) {
-    return Promise.reject(`Could not find ${chartPath}`)
-  }
-  await withErrorMsg(
-    copy(chartPath, destination, { overwrite: true }),
-    "Could not copy chart directory"
-  )
-}
-
-async function isChartExist(chartPath: string) {
-  const chartYamlPath = path.join(chartPath, "Chart.yaml")
-  return await exists(chartYamlPath)
 }
 
 async function main() {
@@ -92,17 +83,46 @@ async function main() {
     )}`
   )
 
-  if (command.length === 1 && command[0] === "push") {
+  if (command.length === 1 && command[0] === "cm-push") {
     let helmExecuteResult: { exitCode?: number } = {}
     try {
       await bundleChart(chartLocation, options)
       helmExecuteResult = await helmExecute([
-        "push",
+        "cm-push",
         chartLocation,
         ...helmRestArgs,
       ])
     } finally {
       await cleanupBundle(chartLocation)
+    }
+
+    if (helmExecuteResult.exitCode) {
+      Deno.exit(helmExecuteResult.exitCode)
+    }
+
+    return
+  }
+
+  if (command.length === 1 && command[0] === "push") {
+    let helmExecuteResult: { exitCode?: number } = {}
+    const chartPackagePath = await getChartPackagePath(chartLocation)
+    try {
+      await bundleChart(chartLocation, options)
+      await helmExecute([
+        "package",
+        chartLocation,
+        "--destination",
+        chartLocation,
+      ])
+
+      helmExecuteResult = await helmExecute([
+        "push",
+        chartPackagePath,
+        ...helmRestArgs,
+      ])
+    } finally {
+      await cleanupBundle(chartLocation)
+      await cleanupChartPackage(chartPackagePath)
     }
 
     if (helmExecuteResult.exitCode) {

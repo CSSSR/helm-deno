@@ -137,10 +137,32 @@ Deno.test(
 )
 
 Deno.test(
-  "Should parse helm template args for `helm push ./chart http://localhost:8080`",
+  "Should parse helm template args for `helm push ./chart oci://localhost:8080`",
   () => {
     const res = parseHelmArgs([
       "push",
+      "./chart",
+      "oci://localhost:8080",
+      "--version",
+      "1.0.0",
+    ])
+
+    const expected: ReturnType<typeof parseHelmArgs> = {
+      command: ["push"],
+      releaseName: "",
+      chartLocation: "./chart",
+      options: ["oci://localhost:8080", "--version", "1.0.0"],
+    }
+
+    assertEquals(res, expected)
+  }
+)
+
+Deno.test(
+  "Should parse helm template args for `helm cm-push ./chart http://localhost:8080`",
+  () => {
+    const res = parseHelmArgs([
+      "cm-push",
       "./chart",
       "http://localhost:8080",
       "--version",
@@ -148,7 +170,7 @@ Deno.test(
     ])
 
     const expected: ReturnType<typeof parseHelmArgs> = {
-      command: ["push"],
+      command: ["cm-push"],
       releaseName: "",
       chartLocation: "./chart",
       options: ["http://localhost:8080", "--version", "1.0.0"],

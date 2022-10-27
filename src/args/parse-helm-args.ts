@@ -1,8 +1,6 @@
 export const supportedCommands = ["upgrade", "template", "install"]
 
-export function parseHelmArgs(
-  args: readonly string[]
-): {
+export function parseHelmArgs(args: readonly string[]): {
   readonly command: readonly string[]
   readonly releaseName: string
   readonly chartLocation: string
@@ -10,6 +8,15 @@ export function parseHelmArgs(
 } {
   const restArgs = args.slice()
   const command: string[] = []
+
+  if (restArgs[0] === "cm-push") {
+    return {
+      command: ["cm-push"],
+      releaseName: "",
+      chartLocation: restArgs[1],
+      options: restArgs.slice(2),
+    }
+  }
 
   if (restArgs[0] === "push") {
     return {
