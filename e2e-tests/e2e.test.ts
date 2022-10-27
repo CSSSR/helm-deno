@@ -60,7 +60,7 @@ async function assertYamlParsable(yamlFileContent: string) {
   try {
     await yaml.parseAll(yamlFileContent)
   } catch (err) {
-    throw new Error(`Cloud parse yaml context ${err} ${yamlFileContent}`)
+    throw new Error(`Could not parse yaml context ${err} ${yamlFileContent}`)
   }
 }
 
@@ -394,7 +394,7 @@ async function startHelmRegistry() {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     if (errorsCount > 10) {
-      throw new Error("To many errors")
+      throw new Error("Too many errors")
     }
     try {
       const response = await fetch(`http://localhost:${port}/health`)
