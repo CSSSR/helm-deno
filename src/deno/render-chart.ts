@@ -106,8 +106,13 @@ export async function renderDenoChart(
   chartPath: string,
   denoOptions: HelmDenoOptions
 ): Promise<{ debug: string } | undefined> {
-  const { deno, importer, templateFolderPath, bundlePath, indexFilePath } =
-    getPaths(chartPath)
+  const {
+    deno,
+    importer,
+    templateFolderPath,
+    bundlePath,
+    indexFilePath,
+  } = getPaths(chartPath)
   await ensureDir(templateFolderPath)
 
   const isDenoChart =

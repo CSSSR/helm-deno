@@ -635,7 +635,8 @@ Deno.test({
 })
 
 Deno.test({
-  name: "should clean deno-bundle.js and helm package if push wasn't successful",
+  name:
+    "should clean deno-bundle.js and helm package if push wasn't successful",
   ignore: !runAllTests,
   async fn() {
     const chartPath = path.join(chartsBin, "one-service")
@@ -701,7 +702,8 @@ Deno.test({
 })
 
 Deno.test({
-  name: "should use deno-bundle.js if `--deno-bundle prefer` have been passed and deno-bundle.js exists",
+  name:
+    "should use deno-bundle.js if `--deno-bundle prefer` have been passed and deno-bundle.js exists",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")
 
@@ -728,7 +730,8 @@ Deno.test({
 })
 
 Deno.test({
-  name: "should use deno-templates/index.ts if `--deno-bundle ignore` have been passed",
+  name:
+    "should use deno-templates/index.ts if `--deno-bundle ignore` have been passed",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")
 
@@ -755,7 +758,8 @@ Deno.test({
 })
 
 Deno.test({
-  name: "should use deno-templates/index.ts if --deno-bundle have not been passed",
+  name:
+    "should use deno-templates/index.ts if --deno-bundle have not been passed",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")
 
@@ -780,7 +784,8 @@ Deno.test({
 })
 
 Deno.test({
-  name: "should throw error if `--deno-bundle require` have been passed but deno-bundle.js do not exist",
+  name:
+    "should throw error if `--deno-bundle require` have been passed but deno-bundle.js do not exist",
   async fn() {
     const chartPath = path.join(chartsBin, "one-service")
 
@@ -798,7 +803,8 @@ Deno.test({
 })
 
 Deno.test({
-  name: "should not throw error if `--deno-bundle prefer` have been passed and deno-bundle.js do not exist",
+  name:
+    "should not throw error if `--deno-bundle prefer` have been passed and deno-bundle.js do not exist",
   async fn() {
     const chartPath = path.join(chartsBin, "one-service")
 
@@ -884,7 +890,8 @@ Deno.test({
 })
 
 Deno.test({
-  name: "should successfuly run `helm deno template` with remote deno chart (with --repo option)",
+  name:
+    "should successfuly run `helm deno template` with remote deno chart (with --repo option)",
   ignore: !runAllTests,
   async fn() {
     const { status, stdout, stderr } = await runHelmDeno([
@@ -925,7 +932,8 @@ async function addStableRepo() {
 }
 
 Deno.test({
-  name: "should successfuly run `helm deno template` with remote chart (with helm repo add)",
+  name:
+    "should successfuly run `helm deno template` with remote chart (with helm repo add)",
   ignore: !runAllTests,
   async fn() {
     const tmpRepo = await addStableRepo()

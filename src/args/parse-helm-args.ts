@@ -1,6 +1,8 @@
 export const supportedCommands = ["upgrade", "template", "install"]
 
-export function parseHelmArgs(args: readonly string[]): {
+export function parseHelmArgs(
+  args: readonly string[]
+): {
   readonly command: readonly string[]
   readonly releaseName: string
   readonly chartLocation: string
