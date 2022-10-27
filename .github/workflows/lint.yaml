@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install dependencies
         run: make install-tools
@@ -16,4 +16,4 @@ jobs:
         run: make lint
 
       - name: Run editorconfig linter
-        uses: docker://mstruebing/editorconfig-checker:2.3.3
+        uses: docker://mstruebing/editorconfig-checker:2.4.0
