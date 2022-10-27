@@ -1,9 +1,9 @@
 import type { ChartContext } from "../std/mod.ts"
 import type { HelmDenoOptions } from "../args/parse-helm-deno-args.ts"
-import * as yaml from "https://deno.land/std@0.107.0/encoding/yaml.ts"
-import { exists } from "https://deno.land/std@0.107.0/fs/exists.ts"
-import { ensureDir } from "https://deno.land/std@0.107.0/fs/ensure_dir.ts"
-import * as path from "https://deno.land/std@0.107.0/path/mod.ts"
+import * as yaml from "https://deno.land/std@0.160.0/encoding/yaml.ts"
+import { exists } from "https://deno.land/std@0.160.0/fs/exists.ts"
+import { ensureDir } from "https://deno.land/std@0.160.0/fs/ensure_dir.ts"
+import * as path from "https://deno.land/std@0.160.0/path/mod.ts"
 import { ignoreNotFoundError } from "../utils/ignore-not-found-error.ts"
 import { waitForProcess } from "../utils/process.ts"
 

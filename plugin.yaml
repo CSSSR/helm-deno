@@ -4,6 +4,6 @@ usage: "Helm charts with Deno"
 description: |-
   This plugin allows to use Deno to prepare kubernetes manifests
 hooks:
-  install: "$HELM_PLUGIN_DIR/scripts/install.sh v1.14.0"
-  update: "$HELM_PLUGIN_DIR/scripts/install.sh v1.14.0"
+  install: "$HELM_PLUGIN_DIR/scripts/install.sh v1.26.2"
+  update: "$HELM_PLUGIN_DIR/scripts/install.sh v1.26.2"
 command: "$HELM_PLUGIN_DIR/scripts/run.sh"

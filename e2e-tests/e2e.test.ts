@@ -1,13 +1,12 @@
 // Use fork until https://github.com/piyush-bhatt/deno-port/pull/1 is merged
 import { getAvailablePort } from "https://raw.githubusercontent.com/Nitive/deno-port/fix-getting-random-port/mod.ts"
-
-import { exists } from "https://deno.land/std@0.107.0/fs/exists.ts"
-import * as path from "https://deno.land/std@0.107.0/path/mod.ts"
-import * as yaml from "https://deno.land/std@0.107.0/encoding/yaml.ts"
+import { exists } from "https://deno.land/std@0.160.0/fs/exists.ts"
+import * as path from "https://deno.land/std@0.160.0/path/mod.ts"
+import * as yaml from "https://deno.land/std@0.160.0/encoding/yaml.ts"
 import {
   assertEquals,
   assertStringIncludes,
-} from "https://deno.land/std@0.107.0/testing/asserts.ts"
+} from "https://deno.land/std@0.160.0/testing/asserts.ts"
 import { ignoreNotFoundError } from "../src/utils/ignore-not-found-error.ts"
 import { waitForProcess } from "../src/utils/process.ts"
 
