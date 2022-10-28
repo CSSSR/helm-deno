@@ -11,7 +11,7 @@ install-tools:
 	@ yarn --frozen-lockfile
 
 install-plugin:
-	@ HELM_PLUGIN_DIR="$$PWD" ./scripts/install.sh "v$${DENO_VERSION:-1.26.2}"
+	@ HELM_PLUGIN_DIR="$$PWD" ./scripts/install.sh "v$${DENO_VERSION:-1.27.0}"
 
 lint:
 	@ yarn prettier --check .
