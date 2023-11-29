@@ -11,7 +11,7 @@ jobs:
 
       - uses: denoland/setup-deno@v1
         with:
-          deno-version: v1.27.x
+          deno-version: v1.38.x
 
       - name: Install plugin
         run: make install-plugin
