@@ -11,7 +11,7 @@ install-tools:
 	@ yarn --frozen-lockfile
 
 install-plugin:
-	@ HELM_PLUGIN_DIR="$$PWD" ./scripts/install.sh "v$${DENO_VERSION:-1.27.0}"
+	@ HELM_PLUGIN_DIR="$$PWD" ./scripts/install.sh "v$${DENO_VERSION:-1.38.3}"
 
 lint:
 	@ yarn prettier --check .
@@ -40,3 +40,4 @@ test-all:
 update-deps:
 	deno run -A https://deno.land/x/udd@0.8.1/main.ts src/*.ts
 	deno run -A https://deno.land/x/udd@0.8.1/main.ts src/**/*.ts
+	deno run -A https://deno.land/x/udd@0.8.1/main.ts e2e-tests/**/*.ts

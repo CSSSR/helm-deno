@@ -1,10 +1,10 @@
-import { exists } from "https://deno.land/std@0.160.0/fs/exists.ts"
-import { copy } from "https://deno.land/std@0.160.0/fs/copy.ts"
-import * as yaml from "https://deno.land/std@0.160.0/encoding/yaml.ts"
-import * as path from "https://deno.land/std@0.160.0/path/mod.ts"
-import { Chart } from "./chart-types.ts"
+import { copy } from "https://deno.land/std@0.208.0/fs/copy.ts"
+import { exists } from "https://deno.land/std@0.208.0/fs/exists.ts"
+import * as path from "https://deno.land/std@0.208.0/path/mod.ts"
+import * as yaml from "https://deno.land/std@0.208.0/yaml/mod.ts"
 import { withErrorMsg } from "../std/mod.ts"
 import { ignoreNotFoundError } from "../utils/ignore-not-found-error.ts"
+import { Chart } from "./chart-types.ts"
 
 export async function copyChart(chartPath: string, destination: string) {
   const destinationExists = await exists(chartPath)

@@ -1,9 +1,9 @@
-import args from "https://deno.land/x/args@2.1.1/wrapper.ts"
 import {
-  PartialOption,
   BinaryFlag,
+  PartialOption,
 } from "https://deno.land/x/args@2.1.1/flag-types.ts"
 import { Choice, Text } from "https://deno.land/x/args@2.1.1/value-types.ts"
+import args from "https://deno.land/x/args@2.1.1/wrapper.ts"
 
 type LogLevel = "info" | "debug"
 

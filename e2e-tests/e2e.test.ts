@@ -1,12 +1,12 @@
 // Use fork until https://github.com/piyush-bhatt/deno-port/pull/1 is merged
-import { getAvailablePort } from "https://raw.githubusercontent.com/Nitive/deno-port/fix-getting-random-port/mod.ts"
-import { exists } from "https://deno.land/std@0.160.0/fs/exists.ts"
-import * as path from "https://deno.land/std@0.160.0/path/mod.ts"
-import * as yaml from "https://deno.land/std@0.160.0/encoding/yaml.ts"
+import { exists } from "https://deno.land/std@0.208.0/fs/exists.ts"
+import * as path from "https://deno.land/std@0.208.0/path/mod.ts"
 import {
   assertEquals,
   assertStringIncludes,
-} from "https://deno.land/std@0.160.0/testing/asserts.ts"
+} from "https://deno.land/std@0.208.0/testing/asserts.ts"
+import * as yaml from "https://deno.land/std@0.208.0/yaml/mod.ts"
+import { getAvailablePort } from "https://raw.githubusercontent.com/Nitive/deno-port/fix-getting-random-port/mod.ts"
 import { ignoreNotFoundError } from "../src/utils/ignore-not-found-error.ts"
 import { waitForProcess } from "../src/utils/process.ts"
 
@@ -139,7 +139,6 @@ Deno.test(
       stdout.replaceAll(helmPluginDir, ""),
       `\
 ==> Linting /e2e-tests/charts/one-service
-[WARNING] templates/: directory not found
 
 1 chart(s) linted, 0 chart(s) failed
 `
@@ -579,6 +578,7 @@ Deno.test({
       const fetchResult = await runHelmDeno([
         "fetch",
         `${ociRegistry.url}/one-service`,
+        "--plain-http",
         "--untar",
         "--untardir",
         fetchDirectory,
@@ -635,8 +635,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should clean deno-bundle.js and helm package if push wasn't successful",
+  name: "should clean deno-bundle.js and helm package if push wasn't successful",
   ignore: !runAllTests,
   async fn() {
     const chartPath = path.join(chartsBin, "one-service")
@@ -702,8 +701,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should use deno-bundle.js if `--deno-bundle prefer` have been passed and deno-bundle.js exists",
+  name: "should use deno-bundle.js if `--deno-bundle prefer` have been passed and deno-bundle.js exists",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")
 
@@ -730,8 +728,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should use deno-templates/index.ts if `--deno-bundle ignore` have been passed",
+  name: "should use deno-templates/index.ts if `--deno-bundle ignore` have been passed",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")
 
@@ -758,8 +755,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should use deno-templates/index.ts if --deno-bundle have not been passed",
+  name: "should use deno-templates/index.ts if --deno-bundle have not been passed",
   async fn() {
     const chartPath = path.join(chartsBin, "prebundled")
 
@@ -784,8 +780,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should throw error if `--deno-bundle require` have been passed but deno-bundle.js do not exist",
+  name: "should throw error if `--deno-bundle require` have been passed but deno-bundle.js do not exist",
   async fn() {
     const chartPath = path.join(chartsBin, "one-service")
 
@@ -803,8 +798,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should not throw error if `--deno-bundle prefer` have been passed and deno-bundle.js do not exist",
+  name: "should not throw error if `--deno-bundle prefer` have been passed and deno-bundle.js do not exist",
   async fn() {
     const chartPath = path.join(chartsBin, "one-service")
 
@@ -890,8 +884,7 @@ Deno.test({
 })
 
 Deno.test({
-  name:
-    "should successfuly run `helm deno template` with remote deno chart (with --repo option)",
+  name: "should successfuly run `helm deno template` with remote deno chart (with --repo option)",
   ignore: !runAllTests,
   async fn() {
     const { status, stdout, stderr } = await runHelmDeno([
@@ -932,8 +925,7 @@ async function addStableRepo() {
 }
 
 Deno.test({
-  name:
-    "should successfuly run `helm deno template` with remote chart (with helm repo add)",
+  name: "should successfuly run `helm deno template` with remote chart (with helm repo add)",
   ignore: !runAllTests,
   async fn() {
     const tmpRepo = await addStableRepo()

@@ -1,9 +1,9 @@
-import args from "https://deno.land/x/args@2.1.1/wrapper.ts"
 import {
-  PartialOption,
   BinaryFlag,
+  PartialOption,
 } from "https://deno.land/x/args@2.1.1/flag-types.ts"
 import { Text } from "https://deno.land/x/args@2.1.1/value-types.ts"
+import args from "https://deno.land/x/args@2.1.1/wrapper.ts"
 
 const textOption = (flag: string) =>
   PartialOption(flag, {
