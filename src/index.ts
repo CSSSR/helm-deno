@@ -1,5 +1,5 @@
 // deno-lint-ignore-file
-import * as path from "https://deno.land/std@0.160.0/path/mod.ts"
+import * as path from "https://deno.land/std@0.208.0/path/mod.ts"
 import { parseHelmArgs, supportedCommands } from "./args/parse-helm-args.ts"
 import { parseArgs } from "./args/parse-helm-deno-args.ts"
 import {
@@ -8,16 +8,16 @@ import {
   renderDenoChart,
 } from "./deno/render-chart.ts"
 import {
-  copyChart,
-  isChartExist,
-  getChartPackagePath,
   cleanupChartPackage,
+  copyChart,
+  getChartPackagePath,
+  isChartExist,
 } from "./helm/chart-utils.ts"
 import { helmExecute } from "./helm/execute.ts"
 import { fetchChart } from "./helm/fetch.ts"
 import { getChartContext } from "./helm/get-chart-context.ts"
-import { ignoreNotFoundError } from "./utils/ignore-not-found-error.ts"
 import { withErrorMsg } from "./std/mod.ts"
+import { ignoreNotFoundError } from "./utils/ignore-not-found-error.ts"
 
 function helmDenoUsage() {
   const pluginUsage = `\

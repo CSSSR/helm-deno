@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.107.0/testing/asserts.ts"
+import { assertEquals } from "https://deno.land/std@0.208.0/testing/asserts.ts"
 import { parseHelmTemplateArgs } from "../parse-helm-template-args.ts"
 
 Deno.test("Should parse helm template args", () => {
