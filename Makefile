@@ -40,3 +40,4 @@ test-all:
 update-deps:
 	deno run -A https://deno.land/x/udd@0.8.1/main.ts src/*.ts
 	deno run -A https://deno.land/x/udd@0.8.1/main.ts src/**/*.ts
+	deno run -A https://deno.land/x/udd@0.8.1/main.ts e2e-tests/**/*.ts
