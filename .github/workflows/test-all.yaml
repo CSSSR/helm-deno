@@ -40,7 +40,7 @@ jobs:
         run: make install-plugin
 
       - name: Start local kubernetes cluster
-        uses: engineerd/setup-kind@v0.5.0
+        uses: helm/kind-action@v1.8.0
 
       - name: Run tests
         run: make test-all
