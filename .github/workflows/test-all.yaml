@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: denoland/setup-deno@v1
         with:
@@ -15,26 +15,26 @@ jobs:
 
       - name: Install Age Encryption Tool
         run: |
-          wget https://github.com/FiloSottile/age/releases/download/v1.0.0/age-v1.0.0-linux-amd64.tar.gz -O age.tar.gz
+          wget https://github.com/FiloSottile/age/releases/download/v1.1.1/age-v1.1.1-linux-amd64.tar.gz -O age.tar.gz
           tar xvf age.tar.gz age/age age/age-keygen
           echo "$PWD/age" >> $GITHUB_PATH
 
       - name: Install sops
-        uses: mdgreenwald/mozilla-sops-action@v1.2.0
+        uses: mdgreenwald/mozilla-sops-action@v1.5.0
         with:
-          version: 3.7.3
+          version: 3.8.1
 
       - name: Install helm-diff
         run: |
-          helm plugin install https://github.com/databus23/helm-diff --version v3.6.0
+          helm plugin install https://github.com/databus23/helm-diff --version v3.8.1
 
       - name: Install helm-secrets
         run: |
-          helm plugin install https://github.com/jkroepke/helm-secrets --version v4.1.1
+          helm plugin install https://github.com/jkroepke/helm-secrets --version v4.5.1
 
       - name: Install helm-push
         run: |
-          helm plugin install https://github.com/chartmuseum/helm-push --version v0.10.3
+          helm plugin install https://github.com/chartmuseum/helm-push --version v0.10.4
 
       - name: Install plugin
         run: make install-plugin
