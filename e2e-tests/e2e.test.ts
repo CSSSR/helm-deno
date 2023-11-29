@@ -139,7 +139,6 @@ Deno.test(
       stdout.replaceAll(helmPluginDir, ""),
       `\
 ==> Linting /e2e-tests/charts/one-service
-[WARNING] templates/: directory not found
 
 1 chart(s) linted, 0 chart(s) failed
 `
@@ -579,6 +578,7 @@ Deno.test({
       const fetchResult = await runHelmDeno([
         "fetch",
         `${ociRegistry.url}/one-service`,
+        "--plain-http",
         "--untar",
         "--untardir",
         fetchDirectory,
